@@ -242,13 +242,13 @@ export default function Dashboard({ session }: { session: any }) {
   const quotaPercent = usageInfo ? Math.round((usageInfo.usage / usageInfo.limit) * 100) : 0;
 
   return (
-    <div className="flex h-screen bg-[#06040A] text-white p-3 md:p-4 font-sans overflow-hidden relative mesh-bg noise">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-[#06040A] text-white p-3 md:p-4 font-sans overflow-x-hidden md:overflow-hidden relative mesh-bg noise">
       {/* Ambient Orbs */}
       <div className="orb orb-purple w-[400px] h-[400px] top-[-10%] left-[-5%] animate-pulse-glow" />
       <div className="orb orb-blue w-[350px] h-[350px] bottom-[-10%] right-[-5%] animate-pulse-glow" style={{ animationDelay: "2s" }} />
 
       {/* SIDEBAR */}
-      <div className="w-[240px] md:w-[260px] glass-card rounded-[28px] flex flex-col p-5 mr-3 md:mr-4 z-10 relative shrink-0">
+      <div className="w-full md:w-[260px] glass-card rounded-[28px] flex flex-col p-5 mb-4 md:mb-0 mr-0 md:mr-4 z-10 relative shrink-0">
         {/* Logo + Member Badge */}
         <div className="flex flex-col items-center mb-6 mt-2">
           <div className="w-16 h-16 bg-gradient-to-br from-[#ddbc76] to-[#aa8323] rounded-2xl flex items-center justify-center mb-3 glow-gold">
