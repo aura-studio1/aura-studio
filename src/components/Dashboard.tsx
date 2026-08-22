@@ -138,7 +138,6 @@ export default function Dashboard({ session }: { session: any }) {
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src);
       setVideoDuration(video.duration);
     };
     video.src = url;
