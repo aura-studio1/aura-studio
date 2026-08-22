@@ -122,7 +122,9 @@ export default function Dashboard({ session }: { session: any }) {
   };
 
   const selectFile = (selected: File) => {
-    const maxMB = usageInfo?.role === 'partner' ? 500 : 100;
+    let maxMB = 30; // Free
+    if (usageInfo?.role === 'partner') maxMB = 500;
+    else if (usageInfo?.role === 'premium') maxMB = 100;
     if (activeTab === 'quality' && selected.size > maxMB * 1024 * 1024) {
       setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
       setFile(null);
@@ -171,7 +173,9 @@ export default function Dashboard({ session }: { session: any }) {
   const processVideo = async () => {
     if (!file || (activeTab === 'quality' && !isReady)) return;
     
-    const maxMB = usageInfo?.role === 'partner' ? 500 : 100;
+    let maxMB = 30; // Free
+    if (usageInfo?.role === 'partner') maxMB = 500;
+    else if (usageInfo?.role === 'premium') maxMB = 100;
     if (activeTab === 'quality' && file.size > maxMB * 1024 * 1024) {
       setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
       return;
@@ -447,7 +451,12 @@ export default function Dashboard({ session }: { session: any }) {
                       </div>
                       <input type="file" accept="video/mp4" className="hidden" onChange={handleFileChange} />
                     </label>
-                    <p className="text-[10px] text-gray-600 mt-3">{lang === 'th' ? 'รองรับ MP4 • สูงสุด 100MB' : 'MP4 supported • Max 100MB'}</p>
+                    <p className="text-[10px] text-gray-600 mt-3">
+                      {lang === 'th' 
+                        ? `รองรับ MP4 • สูงสุด ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB` 
+                        : `MP4 supported • Max ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB`
+                      }
+                    </p>
                   </>
                 ) : (
                   <div className="flex items-center gap-4 w-full">
