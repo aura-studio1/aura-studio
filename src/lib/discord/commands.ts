@@ -1,4 +1,4 @@
-import MP4Box from 'mp4box';
+import * as MP4Box from 'mp4box';
 
 const TIKWM_API = 'https://www.tikwm.com/api/';
 
