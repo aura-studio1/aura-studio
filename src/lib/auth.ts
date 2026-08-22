@@ -28,6 +28,7 @@ export const authOptions: NextAuthOptions = {
       // ตรวจสอบยศใน Discord Server (Guild)
       const guildId = process.env.DISCORD_GUILD_ID;
       const botToken = process.env.DISCORD_BOT_TOKEN;
+      const partnerRoleId = process.env.DISCORD_PARTNER_ROLE_ID;
       const premiumRoleId = process.env.DISCORD_PREMIUM_ROLE_ID;
       const freeRoleId = process.env.DISCORD_FREE_ROLE_ID;
 
@@ -43,8 +44,11 @@ export const authOptions: NextAuthOptions = {
             const memberData = await res.json();
             const roles: string[] = memberData.roles || [];
             
-            // เช็คว่า User มียศ Premium หรือ Free
-            if (premiumRoleId && roles.includes(premiumRoleId)) {
+            // เช็คว่า User มียศ Partner, Premium หรือ Free
+            if (partnerRoleId && roles.includes(partnerRoleId)) {
+              hasAccess = true;
+              userRole = "partner";
+            } else if (premiumRoleId && roles.includes(premiumRoleId)) {
               hasAccess = true;
               userRole = "premium";
             } else if (freeRoleId && roles.includes(freeRoleId)) {

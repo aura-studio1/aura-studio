@@ -13,6 +13,8 @@ export default function Dashboard({ session }: { session: any }) {
   const { t, lang, setLang } = useLanguage();
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
+  const [targetSizeMB, setTargetSizeMB] = useState<number>(0);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -120,15 +122,28 @@ export default function Dashboard({ session }: { session: any }) {
   };
 
   const selectFile = (selected: File) => {
-    if (activeTab === 'quality' && selected.size > 100 * 1024 * 1024) {
-      setErrorMsg(t("dash.limit"));
+    const maxMB = usageInfo?.role === 'partner' ? 500 : 100;
+    if (activeTab === 'quality' && selected.size > maxMB * 1024 * 1024) {
+      setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
       setFile(null);
       return;
     }
     setFile(selected);
     setErrorMsg("");
     setIsComplete(false);
-    setVideoUrl(URL.createObjectURL(selected));
+    const url = URL.createObjectURL(selected);
+    setVideoUrl(url);
+    
+    // Get video duration for compression bitrate calculation
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      setVideoDuration(video.duration);
+    };
+    video.src = url;
+    
+    setTargetSizeMB(parseFloat((selected.size / (1024 * 1024)).toFixed(2)));
   };
 
   // Drag & Drop handlers
@@ -157,8 +172,9 @@ export default function Dashboard({ session }: { session: any }) {
   const processVideo = async () => {
     if (!file || (activeTab === 'quality' && !isReady)) return;
     
-    if (activeTab === 'quality' && file.size > 100 * 1024 * 1024) {
-      setErrorMsg(t("dash.limit"));
+    const maxMB = usageInfo?.role === 'partner' ? 500 : 100;
+    if (activeTab === 'quality' && file.size > maxMB * 1024 * 1024) {
+      setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
       return;
     }
     
@@ -198,21 +214,41 @@ export default function Dashboard({ session }: { session: any }) {
         const ffmpeg = ffmpegRef.current;
         await ffmpeg.writeFile('input.mp4', await fetchFile(file));
         
-        // Binary level patch (No re-encoding)
-        // We spoof the color space and metadata to bypass TikTok compression
-        await ffmpeg.exec([
-          '-i', 'input.mp4',
-          '-c:v', 'copy',
-          '-c:a', 'copy',
-          '-movflags', 'faststart+use_metadata_tags',
-          '-color_primaries', 'bt709',
-          '-color_trc', 'bt709',
-          '-colorspace', 'bt709',
-          '-color_range', 'tv',
-          '-metadata', 'creation_time=now',
-          '-metadata:s:v:0', 'handler_name=Core Media Video',
-          'output.mp4'
-        ]);
+        const originalMB = file.size / (1024 * 1024);
+        if (usageInfo?.role === 'partner' && targetSizeMB < originalMB) {
+          // Re-encode required to reduce size
+          const targetBitrate = Math.floor((targetSizeMB * 8388608) / (videoDuration || 1));
+          await ffmpeg.exec([
+            '-i', 'input.mp4',
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-b:v', `${targetBitrate}`,
+            '-c:a', 'copy',
+            '-movflags', 'faststart+use_metadata_tags',
+            '-color_primaries', 'bt709',
+            '-color_trc', 'bt709',
+            '-colorspace', 'bt709',
+            '-color_range', 'tv',
+            '-metadata', 'creation_time=now',
+            '-metadata:s:v:0', 'handler_name=Core Media Video',
+            'output.mp4'
+          ]);
+        } else {
+          // Binary level patch (No re-encoding)
+          await ffmpeg.exec([
+            '-i', 'input.mp4',
+            '-c:v', 'copy',
+            '-c:a', 'copy',
+            '-movflags', 'faststart+use_metadata_tags',
+            '-color_primaries', 'bt709',
+            '-color_trc', 'bt709',
+            '-colorspace', 'bt709',
+            '-color_range', 'tv',
+            '-metadata', 'creation_time=now',
+            '-metadata:s:v:0', 'handler_name=Core Media Video',
+            'output.mp4'
+          ]);
+        }
         
         const data = await ffmpeg.readFile('output.mp4');
         const patchedData = applyBinaryPatch(data as Uint8Array);
@@ -255,8 +291,8 @@ export default function Dashboard({ session }: { session: any }) {
              <span className="text-2xl font-black text-black">A</span>
           </div>
           <h2 className="text-lg font-bold tracking-widest text-gradient-gold">AURA</h2>
-          <div className="mt-2 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase glass-gold text-[#ddbc76]">
-            {session?.user?.role === "premium" ? t("dash.premium") : "MEMBER"}
+          <div className={`mt-2 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${session?.user?.role === 'partner' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] border border-blue-400' : 'glass-gold text-[#ddbc76]'}`}>
+            {session?.user?.role === 'partner' ? 'PARTNER' : (session?.user?.role === "premium" ? t("dash.premium") : "MEMBER")}
           </div>
           {session?.user?.role === "premium" && premiumExpiry && (
             <span className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
@@ -266,7 +302,7 @@ export default function Dashboard({ session }: { session: any }) {
         </div>
 
         {/* Quota Ring */}
-        {usageInfo && (
+        {usageInfo && usageInfo.role !== 'partner' && (
           <div className="glass-card rounded-2xl p-4 mb-4">
             <div className="flex items-center gap-3">
               <div className="relative w-12 h-12 shrink-0">
@@ -460,17 +496,52 @@ export default function Dashboard({ session }: { session: any }) {
 
               {/* File Info (for Quality tab) */}
               {activeTab === 'quality' && file && (
-                <div className="mt-6 grid grid-cols-3 gap-4">
-                  {[
-                    { label: t("dash.size"), value: `${(file.size / (1024 * 1024)).toFixed(2)} MB` },
-                    { label: t("dash.format"), value: file.type || 'video/mp4' },
-                    { label: t("compare.quality"), value: t("dash.max") },
-                  ].map((item, i) => (
-                    <div key={i} className="glass-card rounded-xl p-4 text-center">
-                      <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">{item.label}</p>
-                      <p className="text-sm font-bold text-white">{item.value}</p>
-                    </div>
-                  ))}
+                <div className="mt-6 space-y-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      { label: t("dash.size"), value: `${(file.size / (1024 * 1024)).toFixed(2)} MB` },
+                      { label: t("dash.format"), value: file.type || 'video/mp4' },
+                      { label: t("compare.quality"), value: t("dash.max") },
+                    ].map((item, i) => (
+                      <div key={i} className="glass-card rounded-xl p-4 text-center">
+                        <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">{item.label}</p>
+                        <p className="text-sm font-bold text-white">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Partner Compression Slider */}
+                  <div className={`glass-card rounded-[24px] p-6 relative overflow-hidden ${usageInfo?.role !== 'partner' ? 'opacity-50 pointer-events-none' : 'border-blue-500/30'}`}>
+                     {usageInfo?.role !== 'partner' && (
+                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                          <Shield className="w-8 h-8 text-blue-400 mb-2" />
+                          <p className="text-sm font-bold text-white">Partner Only Feature</p>
+                       </div>
+                     )}
+                     <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-white font-bold flex items-center gap-2">
+                             <Settings className="w-4 h-4 text-blue-400" />
+                             {lang === 'th' ? 'บีบอัดขนาดไฟล์' : 'Compress File Size'}
+                          </h4>
+                          <p className="text-[10px] text-gray-400 mt-1">
+                             {lang === 'th' ? 'เลื่อนเพื่อกำหนดขนาดไฟล์ MB ที่ต้องการ' : 'Adjust slider to set target MB'}
+                          </p>
+                        </div>
+                        <div className="text-xl font-black text-blue-400">
+                           {targetSizeMB} <span className="text-sm text-gray-400">MB</span>
+                        </div>
+                     </div>
+                     <input 
+                       type="range" 
+                       min="1" 
+                       max={Math.ceil(file.size / (1024 * 1024))} 
+                       step="0.1"
+                       value={targetSizeMB}
+                       onChange={(e) => setTargetSizeMB(parseFloat(e.target.value))}
+                       className="w-full accent-blue-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                     />
+                  </div>
                 </div>
               )}
 

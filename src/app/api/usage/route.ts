@@ -155,7 +155,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const limit = role === 'premium' ? 5 : 3;
+    const limit = role === 'partner' ? 999999 : (role === 'premium' ? 5 : 3);
     const isAllowed = usage.usage_count < limit;
 
     return NextResponse.json({
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
 
   try {
     let usage = await getOrCreateUsage(discordId, role);
-    const limit = role === 'premium' ? 5 : 3;
+    const limit = role === 'partner' ? 999999 : (role === 'premium' ? 5 : 3);
     
     // One more check in case it was reset right now
     const lastReset = new Date(usage.last_reset_date);
