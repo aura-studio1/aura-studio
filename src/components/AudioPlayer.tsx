@@ -1,48 +1,50 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, Volume1 } from "lucide-react";
 
 export default function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [volume, setVolume] = useState(0.15); // Default to 15%
+  const [isHovered, setIsHovered] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.5;
+      audioRef.current.volume = volume;
     }
-  }, []);
+  }, [volume]);
 
   // Handle first interaction to bypass browser autoplay policy
   useEffect(() => {
     const handleFirstInteraction = () => {
-      if (!hasInteracted && audioRef.current) {
+      if (!hasInteracted && audioRef.current && !isPlaying) {
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
             setIsPlaying(true);
             setHasInteracted(true);
           }).catch((err) => {
-            console.warn("Autoplay prevented or audio not loaded:", err);
-            // Don't set isPlaying to true if it failed
+            console.warn("Autoplay prevented:", err);
           });
         }
       }
     };
 
     if (!hasInteracted) {
-      document.addEventListener("click", handleFirstInteraction, { once: true });
-      document.addEventListener("keydown", handleFirstInteraction, { once: true });
+      document.addEventListener("click", handleFirstInteraction, { capture: true, once: true });
+      document.addEventListener("keydown", handleFirstInteraction, { capture: true, once: true });
     }
 
     return () => {
-      document.removeEventListener("click", handleFirstInteraction);
-      document.removeEventListener("keydown", handleFirstInteraction);
+      document.removeEventListener("click", handleFirstInteraction, { capture: true });
+      document.removeEventListener("keydown", handleFirstInteraction, { capture: true });
     };
-  }, [hasInteracted]);
+  }, [hasInteracted, isPlaying]);
 
-  const togglePlay = () => {
+  const togglePlay = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -55,10 +57,20 @@ export default function AudioPlayer() {
             setHasInteracted(true);
           }).catch(e => {
             console.error("Play prevented:", e);
-            alert("ไม่สามารถเล่นเพลงได้: " + e.message);
           });
         }
       }
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+    if (newVol > 0 && !isPlaying) {
+      togglePlay();
+    } else if (newVol === 0 && isPlaying) {
+      togglePlay();
     }
   };
 
@@ -66,17 +78,37 @@ export default function AudioPlayer() {
     <>
       <audio ref={audioRef} src="/bgm.mp3" loop />
       
-      <button
-        onClick={togglePlay}
-        className={`fixed bottom-6 right-6 md:left-6 md:right-auto z-50 p-3 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 border ${
+      <div 
+        className={`fixed bottom-6 right-6 md:left-6 md:right-auto z-50 flex items-center gap-2 p-2 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 border ${
           isPlaying 
-            ? "bg-[#ddbc76]/20 border-[#ddbc76]/40 text-[#ddbc76] hover:bg-[#ddbc76]/30 shadow-[0_0_15px_rgba(221,188,118,0.2)]" 
-            : "bg-black/50 border-white/10 text-gray-400 hover:bg-black/70 hover:text-white"
+            ? "bg-[#ddbc76]/10 border-[#ddbc76]/30 shadow-[0_0_15px_rgba(221,188,118,0.15)]" 
+            : "bg-black/50 border-white/10"
         }`}
-        title={isPlaying ? "Mute Music" : "Play Music"}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {isPlaying ? <Volume2 className="w-5 h-5 animate-pulse" /> : <VolumeX className="w-5 h-5" />}
-      </button>
+        <button
+          onClick={togglePlay}
+          className={`p-2 rounded-full transition-colors ${
+            isPlaying 
+              ? "text-[#ddbc76] hover:bg-[#ddbc76]/20" 
+              : "text-gray-400 hover:text-white hover:bg-white/10"
+          }`}
+          title={isPlaying ? "Pause Music" : "Play Music"}
+        >
+          {volume === 0 || !isPlaying ? <VolumeX className="w-4 h-4" /> : volume < 0.5 ? <Volume1 className="w-4 h-4 animate-pulse" /> : <Volume2 className="w-4 h-4 animate-pulse" />}
+        </button>
+
+        <div className={`overflow-hidden transition-all duration-300 flex items-center ${isHovered ? "w-24 px-2 opacity-100" : "w-0 px-0 opacity-0"}`}>
+          <input 
+            type="range" 
+            min="0" max="1" step="0.01" 
+            value={isPlaying ? volume : 0} 
+            onChange={handleVolumeChange}
+            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-[#ddbc76]"
+          />
+        </div>
+      </div>
     </>
   );
 }
