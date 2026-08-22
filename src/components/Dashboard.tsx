@@ -399,7 +399,7 @@ export default function Dashboard({ session }: { session: any }) {
               </h2>
               <p className="text-gray-400 text-sm font-medium">
                 {activeTab === 'quality' 
-                  ? (lang === 'th' ? 'ฝัง SEI metadata เพื่อบายพาสการบีบอัดของ TikTok อย่างถาวร' : 'Inject SEI logic to bypass TikTok compression permanently.')
+                  ? (lang === 'th' ? 'ปรับแต่งและบีบอัดไฟล์วิดีโอของคุณ' : 'Optimize and compress your video files.')
                   : (lang === 'th' ? 'แปลงวิดีโอของคุณเป็น 60FPS สุดลื่นไหล' : 'Convert your videos to ultra smooth 60FPS')
                 }
               </p>
