@@ -140,6 +140,21 @@ export default function Dashboard({ session }: { session: any }) {
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      const maxDim = Math.max(w, h);
+      const minDim = Math.min(w, h);
+      
+      const role = usageInfo?.role || 'free';
+      if (role === 'free') {
+        if (maxDim > 1920 || minDim > 1080) {
+          setErrorMsg(lang === 'th' ? 'สายฟรีรองรับความละเอียดสูงสุดที่ 1080p เท่านั้น (อัพเกรดเพื่อปลดล็อค 2K/4K)' : 'Free tier supports up to 1080p. Upgrade for 2K/4K.');
+          setFile(null);
+          setVideoUrl(null);
+          return;
+        }
+      }
+      
       setVideoDuration(video.duration);
     };
     video.src = url;
@@ -453,8 +468,8 @@ export default function Dashboard({ session }: { session: any }) {
                     </label>
                     <p className="text-[10px] text-gray-600 mt-3">
                       {lang === 'th' 
-                        ? `รองรับ MP4 • สูงสุด ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB` 
-                        : `MP4 supported • Max ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB`
+                        ? `รองรับ MP4 • สูงสุด ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB (${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'})` 
+                        : `MP4 supported • Max ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB (${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'})`
                       }
                     </p>
                   </>
