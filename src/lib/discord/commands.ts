@@ -27,7 +27,8 @@ export async function extractVideoMetadata(videoUrl: string) {
             }
         }).then(res => {
             if (!res.ok) {
-                return reject(new Error("Failed to fetch video stream"));
+                reject(new Error("Failed to fetch video stream"));
+                throw new Error("Failed to fetch video stream");
             }
             return res.arrayBuffer();
         }).then((arrayBuffer: any) => {
