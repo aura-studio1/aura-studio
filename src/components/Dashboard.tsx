@@ -126,7 +126,7 @@ export default function Dashboard({ session }: { session: any }) {
     if (usageInfo?.role === 'partner') maxMB = 500;
     else if (usageInfo?.role === 'premium') maxMB = 100;
     if (activeTab === 'quality' && selected.size > maxMB * 1024 * 1024) {
-      setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
+      setErrorMsg(lang === 'th' ? `ไฟล์เกินขนาดที่กำหนด (${maxMB}MB)` : `File exceeds ${maxMB}MB limit`);
       setFile(null);
       return;
     }
@@ -192,7 +192,7 @@ export default function Dashboard({ session }: { session: any }) {
     if (usageInfo?.role === 'partner') maxMB = 500;
     else if (usageInfo?.role === 'premium') maxMB = 100;
     if (activeTab === 'quality' && file.size > maxMB * 1024 * 1024) {
-      setErrorMsg(t("dash.limit") || `Max file size is ${maxMB}MB`);
+      setErrorMsg(lang === 'th' ? `ไฟล์เกินขนาดที่กำหนด (${maxMB}MB)` : `File exceeds ${maxMB}MB limit`);
       return;
     }
     
