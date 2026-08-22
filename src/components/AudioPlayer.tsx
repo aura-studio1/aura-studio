@@ -16,30 +16,41 @@ export default function AudioPlayer() {
     }
   }, [volume]);
 
-  // Handle first interaction to bypass browser autoplay policy
+  // Aggressive autoplay strategy
   useEffect(() => {
-    const handleFirstInteraction = () => {
-      if (!hasInteracted && audioRef.current && !isPlaying) {
+    const startAudio = () => {
+      if (audioRef.current && audioRef.current.paused && !isPlaying) {
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
             setIsPlaying(true);
             setHasInteracted(true);
-          }).catch((err) => {
-            console.warn("Autoplay prevented:", err);
+          }).catch(() => {
+            // Silently fail if browser still blocks it
           });
         }
       }
     };
 
+    // Try immediately (might work if MEI is high)
+    startAudio();
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    
+    const onInteract = () => {
+      startAudio();
+      // Only remove if it successfully started playing
+      if (audioRef.current && !audioRef.current.paused) {
+        events.forEach(e => document.removeEventListener(e, onInteract, { capture: true }));
+      }
+    };
+
     if (!hasInteracted) {
-      document.addEventListener("click", handleFirstInteraction, { capture: true, once: true });
-      document.addEventListener("keydown", handleFirstInteraction, { capture: true, once: true });
+      events.forEach(e => document.addEventListener(e, onInteract, { capture: true, passive: true }));
     }
 
     return () => {
-      document.removeEventListener("click", handleFirstInteraction, { capture: true });
-      document.removeEventListener("keydown", handleFirstInteraction, { capture: true });
+      events.forEach(e => document.removeEventListener(e, onInteract, { capture: true }));
     };
   }, [hasInteracted, isPlaying]);
 
