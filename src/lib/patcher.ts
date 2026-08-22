@@ -284,12 +284,16 @@ function addPhantom(stbl: Box): number {
     if (u32(stsz.payload, 8) !== audioSampleCount) return 0;
 
     const extraSamples = audioSampleCount * (PHANTOM_FACTOR - 1);
+    const extraSizes = new Uint8Array(4 * extraSamples);
+    for (let i = 0; i < extraSamples; i++) {
+        extraSizes[i * 4 + 3] = 8;
+    }
 
     stsz.payload = concat([
         stsz.payload.subarray(0, 8),
         p32(audioSampleCount * PHANTOM_FACTOR),
         stsz.payload.subarray(12),
-        new Uint8Array(8 * extraSamples).map((_, i) => i % 4 === 3 ? 8 : 0)
+        extraSizes
     ]);
 
     const stscEntryCount = u32(stsc.payload, 4);
