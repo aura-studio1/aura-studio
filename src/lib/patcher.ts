@@ -5,6 +5,17 @@ const VISUAL = new Set(['avc1', 'hev1', 'hvc1', 'mp4v']);
 const DROP_FROM_STBL = new Set(['sgpd']);
 
 const COMPRESSOR_NAME = new Uint8Array(32);
+const seiData = new Uint8Array([
+    0x00, 0x00, 0x00, 0x20, // length = 32
+    0x06, // SEI NAL unit type
+    0x05, // user_data_unregistered
+    0x10, // payload size = 16
+    // 16 bytes uuid
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+    0x80, // rbsp_trailing_bits
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // padding
+]);
 const PHANTOM_UNIT = new Uint8Array([0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00]);
 const PHANTOM_FACTOR = 10;
 const SEI_PAYLOAD_SIZE = 760;
@@ -377,11 +388,17 @@ function nalLengthSize(stsd: Box): number {
 }
 
 function buildSei(size: number): Uint8Array {
+    const uuid = new Uint8Array([
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
+    ]);
     const payload = new Uint8Array(size);
     for (let i = 0; i < size; i++) {
         payload[i] = Math.floor(Math.random() * 254) + 1;
     }
-    let rem = size;
+    
+    const totalPayloadSize = 16 + size;
+    let rem = totalPayloadSize;
     const sizeBytes = [];
     while (rem >= 255) {
         sizeBytes.push(255);
@@ -392,6 +409,7 @@ function buildSei(size: number): Uint8Array {
     return concat([
         new Uint8Array([0x06, 0x05]),
         new Uint8Array(sizeBytes),
+        uuid,
         payload,
         new Uint8Array([0x80])
     ]);
