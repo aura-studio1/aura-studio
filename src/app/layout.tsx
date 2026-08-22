@@ -4,6 +4,8 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 
+import AudioPlayer from "@/components/AudioPlayer";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,7 +29,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <AudioPlayer />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>
