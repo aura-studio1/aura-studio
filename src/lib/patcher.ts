@@ -549,6 +549,18 @@ export function applyBinaryPatch(buf: Uint8Array): Uint8Array {
         }
     }
 
+    let patchedElst = false;
+    for (const box of moov.walk()) {
+        if (!patchedElst && box.type === 'elst') {
+            if (box.payload.length >= 8) {
+                if (box.payload[0] === 0 && box.payload[1] === 0 && box.payload[2] === 0 && box.payload[3] === 0) {
+                    box.payload.set(new Uint8Array([0x10, 0x00, 0x00, 0x01]), 4);
+                    patchedElst = true;
+                }
+            }
+        }
+    }
+
     const astco = astbl.find('stco')!;
     const aEntries = stcoEntries(astco);
     aEntries[aEntries.length - 1] = phantomOffset;
