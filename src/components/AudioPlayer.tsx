@@ -8,17 +8,26 @@ export default function AudioPlayer() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+    }
+  }, []);
+
   // Handle first interaction to bypass browser autoplay policy
   useEffect(() => {
     const handleFirstInteraction = () => {
       if (!hasInteracted && audioRef.current) {
-        audioRef.current.volume = 0.3; // Set default volume to 30%
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-          setHasInteracted(true);
-        }).catch((err) => {
-          console.log("Autoplay prevented:", err);
-        });
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+            setHasInteracted(true);
+          }).catch((err) => {
+            console.warn("Autoplay prevented or audio not loaded:", err);
+            // Don't set isPlaying to true if it failed
+          });
+        }
       }
     };
 
@@ -37,10 +46,19 @@ export default function AudioPlayer() {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play().catch(e => console.log("Play prevented:", e));
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+            setHasInteracted(true);
+          }).catch(e => {
+            console.error("Play prevented:", e);
+            alert("ไม่สามารถเล่นเพลงได้: " + e.message);
+          });
+        }
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
