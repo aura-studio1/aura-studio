@@ -42,24 +42,25 @@ export async function POST(req: NextRequest) {
                 });
             }
             
-            // Aggressive global timeout for Discord
-            const timeoutPromise = new Promise<any>((resolve) => {
-                setTimeout(() => {
-                    resolve({
-                        type: 4,
-                        data: { content: '⏳ TikTok API is taking too long! Please try again or use the Recheck button.', flags: 64 }
+            // Execute in background to completely bypass Discord 3-second limit
+            Promise.resolve().then(async () => {
+                try {
+                    const responseData = await processCheckCommand(urlOption.value);
+                    await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(responseData.data)
                     });
-                }, 2200); // 2.2s timeout to guarantee Discord's 3.0s deadline is met
+                } catch (e) {
+                    console.error('Background processing error:', e);
+                }
             });
             
-            const responseData = await Promise.race([
-                processCheckCommand(urlOption.value),
-                timeoutPromise
-            ]);
-            
-            return NextResponse.json(responseData);
+            // Return DEFER immediately (Type 5: Acknowledge with "Bot is thinking...")
+            return NextResponse.json({ type: 5 });
         }
     }
+    
     // 5. Handle Message Components (Type 3)
     if (interaction.type === 3) {
         const { custom_id } = interaction.data;
@@ -69,28 +70,22 @@ export async function POST(req: NextRequest) {
             const url = interaction.message.content;
             
             if (url) {
-                const timeoutPromise = new Promise<any>((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            type: 4,
-                            data: { content: '⏳ TikTok API is taking too long! Please try again.', flags: 64 }
+                // Execute in background
+                Promise.resolve().then(async () => {
+                    try {
+                        const responseData = await processCheckCommand(url);
+                        await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(responseData.data)
                         });
-                    }, 2200);
+                    } catch (e) {
+                        console.error('Background processing error:', e);
+                    }
                 });
                 
-                const responseData = await Promise.race([
-                    processCheckCommand(url),
-                    timeoutPromise
-                ]);
-                
-                // If it timed out, it will be type: 4 (ephemeral message)
-                // If it succeeded, it will be type: 4 from processCheckCommand, 
-                // but for components we want type: 7 (UpdateMessage) if it succeeded!
-                if (!responseData.data.flags) {
-                    responseData.type = 7;
-                }
-                
-                return NextResponse.json(responseData);
+                // Return DEFER update message (Type 6: Acknowledge component interaction and defer update)
+                return NextResponse.json({ type: 6 });
             } else {
                 return NextResponse.json({
                     type: 4,

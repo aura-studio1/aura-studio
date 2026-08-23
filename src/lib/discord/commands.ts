@@ -129,13 +129,10 @@ export async function processCheckCommand(url: string) {
         // Extract extra metadata from actual MP4
         let meta = null;
         try {
-            const timeElapsed = Date.now() - startTime;
-            const remainingTime = Math.max(100, 2500 - timeElapsed); // Give 2.5s total budget
-            
-            if (ttData.play && remainingTime > 200) {
+            if (ttData.play) {
                 meta = await Promise.race([
                     extractVideoMetadata(ttData.hdplay || ttData.play),
-                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), remainingTime))
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
                 ]);
             }
         } catch (e: any) {
