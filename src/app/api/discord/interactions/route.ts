@@ -42,40 +42,16 @@ export async function POST(req: NextRequest) {
                 });
             }
             
-            // Execute in background to completely bypass Discord 3-second limit
-            Promise.resolve().then(async () => {
-                try {
-                    // 8-second timeout to prevent Vercel from killing the process (Hobby limit is 10s)
-                    const timeoutPromise = new Promise<any>((resolve) => {
-                        setTimeout(() => resolve({
-                            type: 4,
-                            data: { content: '⏳ TikTok API is taking too long to respond (> 8s). Please try again later.' }
-                        }), 8000);
-                    });
-                    
-                    const responseData = await Promise.race([
-                        processCheckCommand(urlOption.value),
-                        timeoutPromise
-                    ]);
-                    
-                    if (responseData.data.flags) delete responseData.data.flags;
-                    
-                    const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(responseData.data)
-                    });
-                    
-                    if (!patchRes.ok) {
-                        console.error('PATCH failed:', patchRes.status, await patchRes.text());
-                    }
-                } catch (e) {
-                    console.error('Background processing error:', e);
-                }
-            });
-            
-            // Return DEFER immediately (Type 5: Acknowledge with "Bot is thinking...")
-            return NextResponse.json({ type: 5 });
+            // Vercel kills background tasks instantly. We MUST respond synchronously.
+            try {
+                const responseData = await processCheckCommand(urlOption.value);
+                return NextResponse.json(responseData);
+            } catch (e: any) {
+                return NextResponse.json({
+                    type: 4,
+                    data: { content: '❌ Error processing request.' }
+                });
+            }
         }
     }
     
@@ -84,43 +60,18 @@ export async function POST(req: NextRequest) {
         const { custom_id } = interaction.data;
         
         if (custom_id && custom_id.startsWith('recheck_btn_')) {
-            // Get URL from message content
             const url = interaction.message.content;
-            
             if (url) {
-                // Execute in background
-                Promise.resolve().then(async () => {
-                    try {
-                        const timeoutPromise = new Promise<any>((resolve) => {
-                            setTimeout(() => resolve({
-                                type: 4,
-                                data: { content: '⏳ TikTok API is taking too long to respond (> 8s). Please try again later.' }
-                            }), 8000);
-                        });
-                        
-                        const responseData = await Promise.race([
-                            processCheckCommand(url),
-                            timeoutPromise
-                        ]);
-                        
-                        if (responseData.data.flags) delete responseData.data.flags;
-                        
-                        const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(responseData.data)
-                        });
-                        
-                        if (!patchRes.ok) {
-                            console.error('PATCH failed:', patchRes.status, await patchRes.text());
-                        }
-                    } catch (e) {
-                        console.error('Background processing error:', e);
-                    }
-                });
-                
-                // Return DEFER update message (Type 6: Acknowledge component interaction and defer update)
-                return NextResponse.json({ type: 6 });
+                try {
+                    const responseData = await processCheckCommand(url);
+                    responseData.type = 7; // Update message
+                    return NextResponse.json(responseData);
+                } catch (e: any) {
+                    return NextResponse.json({
+                        type: 4,
+                        data: { content: '❌ Error processing request.', flags: 64 }
+                    });
+                }
             } else {
                 return NextResponse.json({
                     type: 4,

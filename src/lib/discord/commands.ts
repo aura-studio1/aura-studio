@@ -126,19 +126,9 @@ export async function processCheckCommand(url: string) {
     try {
         const ttData = await fetchTikTokData(url);
         
-        // Extract extra metadata from actual MP4
+        // Skip actual MP4 extraction to make Vercel response instantaneous
         let meta = null;
-        try {
-            if (ttData.play) {
-                meta = await Promise.race([
-                    extractVideoMetadata(ttData.hdplay || ttData.play),
-                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
-                ]);
-            }
-        } catch (e: any) {
-            console.warn("Failed to extract video headers:", e.message || e);
-        }
-
+        
         const isShadowBanned = ttData.is_nff_or_nr ? "Yes" : "No";
         const regionName = typeof (Intl as any).DisplayNames !== 'undefined' ? new (Intl as any).DisplayNames(['en'], { type: 'region' }).of(ttData.region || 'US') || ttData.region : ttData.region;
         const flag = getFlagEmoji(ttData.region || 'US');
