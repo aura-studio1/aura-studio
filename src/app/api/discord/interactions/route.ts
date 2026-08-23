@@ -46,11 +46,17 @@ export async function POST(req: NextRequest) {
             Promise.resolve().then(async () => {
                 try {
                     const responseData = await processCheckCommand(urlOption.value);
-                    await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
+                    if (responseData.data.flags) delete responseData.data.flags;
+                    
+                    const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(responseData.data)
                     });
+                    
+                    if (!patchRes.ok) {
+                        console.error('PATCH failed:', patchRes.status, await patchRes.text());
+                    }
                 } catch (e) {
                     console.error('Background processing error:', e);
                 }
@@ -74,11 +80,17 @@ export async function POST(req: NextRequest) {
                 Promise.resolve().then(async () => {
                     try {
                         const responseData = await processCheckCommand(url);
-                        await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
+                        if (responseData.data.flags) delete responseData.data.flags;
+                        
+                        const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(responseData.data)
                         });
+                        
+                        if (!patchRes.ok) {
+                            console.error('PATCH failed:', patchRes.status, await patchRes.text());
+                        }
                     } catch (e) {
                         console.error('Background processing error:', e);
                     }
