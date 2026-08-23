@@ -84,12 +84,12 @@ function getFlagEmoji(countryCode: string) {
 }
 
 function generateMockQualities(ttData: any, meta: any) {
-    const originalRes = meta ? `${meta.width}x${meta.height}` : '1080x1920';
+    const originalRes = meta ? `${meta.width}x${meta.height}` : '1080x1440';
     const originalFps = meta ? meta.fps : 30;
         
     // Fallback if no meta
     const height = meta ? meta.height : 1080;
-    const fps = meta ? meta.fps : 30;
+    const fps = meta ? meta.fps : 60;
     
     // We will build the blockquote with Mock formats based on HD vs Normal play
     let qualityStr = '';
@@ -98,22 +98,15 @@ function generateMockQualities(ttData: any, meta: any) {
         const hdSizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
         const hdMbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n\`\`\`\n🌐 📱 play_addr 🌐 📱 original_1080_0\n1080p60 • ${hdMbps} Mbps • h264 • ${hdSizeMB} MB\n\`\`\``;
-    }
-    
-    if (ttData.play && ttData.size && !ttData.hdplay) {
+        qualityStr += `\n❝ 🌐 📱 play_addr 🌐 📱 original_1080_0 ❞\n1080p60 • ${hdMbps} Mbps • h264 • ${hdSizeMB} MB`;
+    } else if (ttData.play && ttData.size) {
         const sizeMB = (ttData.size / (1024 * 1024)).toFixed(1);
         const mbps = (((ttData.size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n\`\`\`\n🌐 📱 play_addr\n720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n\`\`\``;
+        qualityStr += `\n❝ 🌐 📱 play_addr ❞\n720p30 • ${mbps} Mbps • h264 • ${sizeMB} MB`;
     }
     
-    // We don't strictly need wmplay section if we are matching the Telegram screenshot exactly
-    
-    // Default VQ Score based on sizes (mock)
-    const vqScore = ttData.hdplay ? (60 + Math.random() * 10).toFixed(2) : '0';
-
-    return { qualityStr, originalRes, originalFps, vqScore, height, fps };
+    return { qualityStr, originalRes, originalFps, height, fps };
 }
 
 export async function processCheckCommand(url: string) {
@@ -121,8 +114,18 @@ export async function processCheckCommand(url: string) {
     try {
         const ttData = await fetchTikTokData(url);
         
-        // Skip actual MP4 extraction to make Vercel response instantaneous
+        // Fast MP4 extraction (1.2s strict timeout)
         let meta = null;
+        try {
+            if (ttData.play) {
+                meta = await Promise.race([
+                    extractVideoMetadata(ttData.hdplay || ttData.play),
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1200))
+                ]);
+            }
+        } catch (e: any) {
+            // Ignore timeout
+        }
         
         const isShadowBanned = ttData.is_nff_or_nr ? "Yes" : "No";
         const regionName = typeof (Intl as any).DisplayNames !== 'undefined' ? new (Intl as any).DisplayNames(['en'], { type: 'region' }).of(ttData.region || 'US') || ttData.region : ttData.region;
@@ -138,7 +141,7 @@ export async function processCheckCommand(url: string) {
             categories = "| Video Games\n| Games\n| Entertainment";
         }
 
-        const { qualityStr, height, fps } = generateMockQualities(ttData, meta);
+        const { qualityStr, originalRes, height, fps } = generateMockQualities(ttData, meta);
 
         // Build Discord Embed matching the screenshot exactly
         return {
@@ -165,7 +168,7 @@ export async function processCheckCommand(url: string) {
                             },
                             {
                                 name: "⭐ Quality",
-                                value: `• 🌐 Browser | ${height}p${fps}\n• 📱 Phone | 1080p${fps}\n${qualityStr}`,
+                                value: `• 🌐 Browser | ${height}p${fps}\n• 📱 Phone | 1080p${fps}\n${qualityStr}\n\n| Original | ${originalRes}`,
                                 inline: false
                             },
                             ...(categories ? [{
