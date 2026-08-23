@@ -45,7 +45,19 @@ export async function POST(req: NextRequest) {
             // Execute in background to completely bypass Discord 3-second limit
             Promise.resolve().then(async () => {
                 try {
-                    const responseData = await processCheckCommand(urlOption.value);
+                    // 8-second timeout to prevent Vercel from killing the process (Hobby limit is 10s)
+                    const timeoutPromise = new Promise<any>((resolve) => {
+                        setTimeout(() => resolve({
+                            type: 4,
+                            data: { content: '⏳ TikTok API is taking too long to respond (> 8s). Please try again later.' }
+                        }), 8000);
+                    });
+                    
+                    const responseData = await Promise.race([
+                        processCheckCommand(urlOption.value),
+                        timeoutPromise
+                    ]);
+                    
                     if (responseData.data.flags) delete responseData.data.flags;
                     
                     const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
@@ -79,7 +91,18 @@ export async function POST(req: NextRequest) {
                 // Execute in background
                 Promise.resolve().then(async () => {
                     try {
-                        const responseData = await processCheckCommand(url);
+                        const timeoutPromise = new Promise<any>((resolve) => {
+                            setTimeout(() => resolve({
+                                type: 4,
+                                data: { content: '⏳ TikTok API is taking too long to respond (> 8s). Please try again later.' }
+                            }), 8000);
+                        });
+                        
+                        const responseData = await Promise.race([
+                            processCheckCommand(url),
+                            timeoutPromise
+                        ]);
+                        
                         if (responseData.data.flags) delete responseData.data.flags;
                         
                         const patchRes = await fetch(`https://discord.com/api/v10/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`, {
