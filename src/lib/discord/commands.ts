@@ -84,37 +84,47 @@ function getFlagEmoji(countryCode: string) {
 }
 
 function generateMockQualities(ttData: any, meta: any) {
-    const originalRes = meta ? `${meta.width}x${meta.height}` : (ttData.title?.toLowerCase().includes('game') ? '1920x1080' : '1080x1920');
+    const originalRes = meta ? `${meta.width}x${meta.height}` : '1080x1920';
     const originalFps = meta ? meta.fps : 60;
-    const vqScore = meta?.vqScore ? meta.vqScore : (60 + Math.random() * 15).toFixed(2);
+    const vqScore = meta?.vqScore ? meta.vqScore : '0';
         
     // Fallback if no meta
-    const fps = meta ? meta.fps : (ttData.title?.toLowerCase().includes('game') ? 60 : 30);
+    const fps = meta ? meta.fps : 60;
     
-    const phoneRes = ttData.hdplay ? `1080p${fps}` : `720p${fps}`;
-    const browserRes = ttData.play ? `720p${fps}` : `1080p${fps}`;
+    const phoneRes = `1080p${fps}`;
+    const browserRes = `1080p${fps}`;
     
-    // We will build the blockquote with Mock formats based on HD vs Normal play
     let qualityStr = '';
     
-    if (ttData.hdplay && ttData.hd_size) {
-        const hdSizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
-        const hdMbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+    // Check if HD and Normal are actually different streams
+    const hasHd = ttData.hdplay && ttData.hd_size;
+    const hasNormal = ttData.play && ttData.size;
+    const isSameStream = hasHd && hasNormal && ttData.hd_size === ttData.size;
+
+    if (isSameStream || (hasHd && !hasNormal)) {
+        // Only one unique high quality stream
+        const sizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
+        const mbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+        qualityStr += `\n❝ 🌐 📱 play_addr 🌐 📱 original_1080_0 ❞\n1080p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n`;
+    } else {
+        // Multiple distinct streams exist
+        if (hasHd) {
+            const hdSizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
+            const hdMbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+            qualityStr += `\n❝ 🌐 📱 adapt_lowest_1080_1 ❞\n1080p${fps} • ${hdMbps} Mbps • hevc • ${hdSizeMB} MB\n`;
+        }
         
-        qualityStr += `\n❝ 🌐 📱 adapt_lowest_1080_1 ❞\n1080p${fps} • ${hdMbps} Mbps • hevc • ${hdSizeMB} MB\n`;
-    } 
-    
-    if (ttData.play && ttData.size) {
-        const sizeMB = (ttData.size / (1024 * 1024)).toFixed(1);
-        const mbps = (((ttData.size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+        if (hasNormal) {
+            const sizeMB = (ttData.size / (1024 * 1024)).toFixed(1);
+            const mbps = (((ttData.size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+            qualityStr += `\n❝ 🌐 📱 play_addr 🌐 normal_720_0 📱 play_addr_h264 ❞\n720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n`;
+        }
         
-        qualityStr += `\n❝ 🌐 📱 play_addr 🌐 normal_720_0 📱 play_addr_h264 ❞\n720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n`;
-    }
-    
-    if (ttData.wmplay && ttData.wm_size) {
-        const wmSizeMB = (ttData.wm_size / (1024 * 1024)).toFixed(1);
-        const wmMbps = (((ttData.wm_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
-        qualityStr += `\n❝ 📱 adapt_lower_720_1 ❞\n720p${fps} • ${wmMbps} Mbps • hevc • ${wmSizeMB} MB\n`;
+        if (ttData.wmplay && ttData.wm_size && ttData.wm_size !== ttData.size) {
+            const wmSizeMB = (ttData.wm_size / (1024 * 1024)).toFixed(1);
+            const wmMbps = (((ttData.wm_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+            qualityStr += `\n❝ 📱 adapt_lower_720_1 ❞\n720p${fps} • ${wmMbps} Mbps • hevc • ${wmSizeMB} MB\n`;
+        }
     }
     
     return { qualityStr: qualityStr.trimEnd(), originalRes, originalFps, vqScore, phoneRes, browserRes };
