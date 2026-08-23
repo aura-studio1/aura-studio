@@ -52,6 +52,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(responseData);
         }
     }
+    // 5. Handle Message Components (Type 3)
+    if (interaction.type === 3) {
+        const { custom_id } = interaction.data;
+        
+        if (custom_id && custom_id.startsWith('recheck_btn_')) {
+            // Get URL from message content
+            const url = interaction.message.content;
+            
+            if (url) {
+                const responseData = await processCheckCommand(url);
+                // processCheckCommand returns type: 4 (ChannelMessageWithSource), 
+                // but for components we want type: 7 (UpdateMessage)
+                responseData.type = 7;
+                return NextResponse.json(responseData);
+            } else {
+                return NextResponse.json({
+                    type: 4,
+                    data: { content: "❌ Could not find URL in message content.", flags: 64 }
+                });
+            }
+        }
+    }
     
     return NextResponse.json({ error: 'Unknown interaction type' }, { status: 400 });
 }
+
