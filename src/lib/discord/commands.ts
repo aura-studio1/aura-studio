@@ -122,17 +122,24 @@ function generateMockQualities(ttData: any, meta: any) {
 }
 
 export async function processCheckCommand(url: string) {
+    const startTime = Date.now();
     try {
         const ttData = await fetchTikTokData(url);
         
         // Extract extra metadata from actual MP4
         let meta = null;
         try {
-            if (ttData.play) {
-                meta = await extractVideoMetadata(ttData.hdplay || ttData.play);
+            const timeElapsed = Date.now() - startTime;
+            const remainingTime = Math.max(100, 2500 - timeElapsed); // Give 2.5s total budget
+            
+            if (ttData.play && remainingTime > 200) {
+                meta = await Promise.race([
+                    extractVideoMetadata(ttData.hdplay || ttData.play),
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), remainingTime))
+                ]);
             }
-        } catch (e) {
-            console.warn("Failed to extract video headers:", e);
+        } catch (e: any) {
+            console.warn("Failed to extract video headers:", e.message || e);
         }
 
         const isShadowBanned = ttData.is_nff_or_nr ? "Yes" : "No";
