@@ -20,7 +20,7 @@ export default function Dashboard({ session }: { session: any }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<'quality' | 'smooth'>('quality');
-  const [usageInfo, setUsageInfo] = useState<{ usage: number, limit: number, role: string, isAllowed: boolean, last_reset_date?: string, premium_since?: string, bonus_days?: number } | null>(null);
+  const [usageInfo, setUsageInfo] = useState<{ usage: number, limit: number, smooth_usage: number, smooth_limit: number, role: string, isAllowed: boolean, last_reset_date?: string, smooth_last_reset_date?: string, premium_since?: string, bonus_days?: number } | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [premiumExpiry, setPremiumExpiry] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
@@ -64,34 +64,48 @@ export default function Dashboard({ session }: { session: any }) {
   }, []);
 
   useEffect(() => {
-    if (!usageInfo?.last_reset_date) return;
+    if (!usageInfo) return;
     
     const interval = setInterval(() => {
-      const lastReset = new Date(usageInfo.last_reset_date!);
+      const isSmooth = activeTab === 'smooth';
+      const lastResetDateStr = isSmooth ? usageInfo.smooth_last_reset_date : usageInfo.last_reset_date;
+      
+      if (!lastResetDateStr) return;
+      
+      const lastReset = new Date(lastResetDateStr);
       const now = new Date();
-      // calculate quota reset
       let resetTime = new Date(lastReset);
-      if (usageInfo.role === 'premium') {
+      
+      if (isSmooth) {
+        // Smooth FPS resets daily for both free and premium
         resetTime.setHours(resetTime.getHours() + 24);
       } else {
-        resetTime.setDate(resetTime.getDate() + 7);
+        // AURA Quality resets daily for premium, weekly for free
+        if (usageInfo.role === 'premium') {
+          resetTime.setHours(resetTime.getHours() + 24);
+        } else {
+          resetTime.setDate(resetTime.getDate() + 7);
+        }
       }
       
       const diff = resetTime.getTime() - now.getTime();
       if (diff <= 0) {
         setTimeLeft(t("dash.refreshing") || "Refreshing...");
-        if (usageInfo.usage > 0) {
+        const currentUsage = isSmooth ? usageInfo.smooth_usage : usageInfo.usage;
+        if (currentUsage > 0) {
            fetchUsageInfo();
         }
       } else {
         const h = Math.floor(diff / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
-        if (usageInfo.role === 'free') {
+        
+        if (!isSmooth && usageInfo.role === 'free') {
           const d = Math.floor(h / 24);
           const remainingH = h % 24;
           setTimeLeft(`${d}d ${remainingH}h ${m}m`);
         } else {
+          // Daily resets for smooth (all) and quality (premium)
           setTimeLeft(`${h}h ${m}m ${s}s`);
         }
       }
@@ -196,20 +210,24 @@ export default function Dashboard({ session }: { session: any }) {
       return;
     }
     
-    // Check usage limits for AURA Quality
-    if (activeTab === 'quality') {
-      try {
-        const res = await fetch('/api/usage', { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) {
-          setErrorMsg(data.error || "You have reached your conversion limit.");
-          return;
-        }
-        setUsageInfo(data);
-      } catch (err) {
-        setErrorMsg("Failed to verify usage limits.");
+    // Check usage limits
+    try {
+      const res = await fetch('/api/usage', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type: activeTab })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || "You have reached your conversion limit.");
         return;
       }
+      setUsageInfo(data);
+    } catch (err) {
+      setErrorMsg("Failed to verify usage limits.");
+      return;
     }
 
     setIsProcessing(true);
@@ -293,7 +311,9 @@ export default function Dashboard({ session }: { session: any }) {
     }
   };
 
-  const quotaPercent = usageInfo ? Math.round((usageInfo.usage / usageInfo.limit) * 100) : 0;
+  const currentUsage = usageInfo ? (activeTab === 'smooth' ? usageInfo.smooth_usage : usageInfo.usage) : 0;
+  const currentLimit = usageInfo ? (activeTab === 'smooth' ? usageInfo.smooth_limit : usageInfo.limit) : 1;
+  const quotaPercent = usageInfo ? Math.round((currentUsage / currentLimit) * 100) : 0;
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-[#06040A] text-white p-3 md:p-4 font-sans overflow-x-hidden md:overflow-hidden relative mesh-bg noise">
@@ -336,7 +356,7 @@ export default function Dashboard({ session }: { session: any }) {
                   />
                 </svg>
                 <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black">
-                  {usageInfo.usage}/{usageInfo.limit}
+                  {currentUsage}/{currentLimit > 999 ? '∞' : currentLimit}
                 </span>
               </div>
               <div>

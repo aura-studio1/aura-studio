@@ -8,6 +8,7 @@ export default function AudioPlayer() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [volume, setVolume] = useState(0.15); // Default to 15%
   const [isHovered, setIsHovered] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function AudioPlayer() {
   }, [hasInteracted, isPlaying]);
 
   const togglePlay = (e?: React.MouseEvent) => {
+    e?.preventDefault();
     e?.stopPropagation();
     if (audioRef.current) {
       if (isPlaying) {
@@ -78,12 +80,23 @@ export default function AudioPlayer() {
     e.stopPropagation();
     const newVol = parseFloat(e.target.value);
     setVolume(newVol);
-    if (newVol > 0 && !isPlaying) {
+    if (newVol > 0 && audioRef.current?.paused) {
       togglePlay();
-    } else if (newVol === 0 && isPlaying) {
+    } else if (newVol === 0 && !audioRef.current?.paused) {
       togglePlay();
     }
   };
+
+  const dismissPlayer = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setIsDismissed(true);
+  };
+
+  if (isDismissed) return null;
 
   return (
     <>
@@ -110,7 +123,7 @@ export default function AudioPlayer() {
           {volume === 0 || !isPlaying ? <VolumeX className="w-4 h-4" /> : volume < 0.5 ? <Volume1 className="w-4 h-4 animate-pulse" /> : <Volume2 className="w-4 h-4 animate-pulse" />}
         </button>
 
-        <div className={`overflow-hidden transition-all duration-300 flex items-center ${isHovered ? "w-24 px-2 opacity-100" : "w-0 px-0 opacity-0"}`}>
+        <div className={`overflow-hidden transition-all duration-300 flex items-center gap-2 ${isHovered ? "w-32 px-2 opacity-100" : "w-0 px-0 opacity-0"}`}>
           <input 
             type="range" 
             min="0" max="1" step="0.01" 
@@ -118,6 +131,13 @@ export default function AudioPlayer() {
             onChange={handleVolumeChange}
             className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-[#ddbc76]"
           />
+          <button 
+            onClick={dismissPlayer}
+            className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition"
+            title="ปิดเพลง / Close"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       </div>
     </>

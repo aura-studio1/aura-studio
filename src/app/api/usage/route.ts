@@ -47,6 +47,8 @@ async function getOrCreateUsage(discordId: string, role: string) {
       role, 
       usage_count: 0, 
       last_reset_date: new Date().toISOString(),
+      smooth_usage_count: 0,
+      smooth_last_reset_date: new Date().toISOString(),
       bonus_days: 0
     };
     
@@ -118,6 +120,21 @@ async function getOrCreateUsage(discordId: string, role: string) {
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      usage: 0,
+      limit: 999999,
+      smooth_usage: 0,
+      smooth_limit: 999999,
+      role: 'partner',
+      isAllowed: true,
+      last_reset_date: new Date().toISOString(),
+      smooth_last_reset_date: new Date().toISOString(),
+      premium_since: new Date().toISOString(),
+      bonus_days: 0
+    });
+  }
+
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -128,44 +145,67 @@ export async function GET(req: Request) {
   const role = session.user.role;
 
   try {
-    let usage = await getOrCreateUsage(discordId, role);
-    
-    // Check for resets
-    const lastReset = new Date(usage.last_reset_date);
+    let usageData = await getOrCreateUsage(discordId, role);
     const now = new Date();
+    
+    // Check AURA Quality Reset
+    const lastReset = new Date(usageData.last_reset_date);
     const diffHours = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
-
-    let shouldReset = false;
+    let shouldResetQuality = false;
     if (role === 'free' && diffHours >= (7 * 24)) {
-      shouldReset = true;
+      shouldResetQuality = true;
     } else if (role === 'premium' && diffHours >= 24) {
-      shouldReset = true;
+      shouldResetQuality = true;
     }
 
-    if (shouldReset) {
+    // Check Smooth FPS Reset
+    const smoothLastReset = usageData.smooth_last_reset_date ? new Date(usageData.smooth_last_reset_date) : new Date(0);
+    const smoothDiffHours = (now.getTime() - smoothLastReset.getTime()) / (1000 * 60 * 60);
+    let shouldResetSmooth = false;
+    if (role === 'free' && smoothDiffHours >= 24) {
+      shouldResetSmooth = true; // Free gets 1 per day
+    } else if (role === 'premium' && smoothDiffHours >= 24) {
+      shouldResetSmooth = true;
+    }
+
+    // Perform Resets if needed
+    if (shouldResetQuality || shouldResetSmooth) {
+      const updates: any = {};
+      if (shouldResetQuality) {
+        updates.usage_count = 0;
+        updates.last_reset_date = now.toISOString();
+      }
+      if (shouldResetSmooth) {
+        updates.smooth_usage_count = 0;
+        updates.smooth_last_reset_date = now.toISOString();
+      }
+
       const { data, error } = await supabase
         .from('aura_web_usage')
-        .update({ usage_count: 0, last_reset_date: now.toISOString() })
+        .update(updates)
         .eq('discord_id', discordId)
         .select()
         .single();
       
       if (!error && data) {
-        usage = data;
+        usageData = data;
       }
     }
 
     const limit = role === 'partner' ? 999999 : (role === 'premium' ? 5 : 3);
-    const isAllowed = usage.usage_count < limit;
-
+    const smooth_limit = role === 'partner' || role === 'premium' ? 999999 : 1;
+    
     return NextResponse.json({
-      usage: usage.usage_count,
+      usage: usageData.usage_count,
       limit,
+      smooth_usage: usageData.smooth_usage_count || 0,
+      smooth_limit,
       role,
-      isAllowed,
-      last_reset_date: usage.last_reset_date,
-      premium_since: usage.premium_since,
-      bonus_days: usage.bonus_days
+      isAllowed: true, // we handle this on frontend per tab now
+      last_reset_date: usageData.last_reset_date,
+      smooth_last_reset_date: usageData.smooth_last_reset_date,
+      premium_since: usageData.premium_since,
+      bonus_days: usageData.bonus_days
     });
   } catch (err: any) {
     console.error('Supabase error:', err.message);
@@ -176,6 +216,21 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      success: true,
+      usage: 0,
+      limit: 999999,
+      smooth_usage: 0,
+      smooth_limit: 999999,
+      role: 'partner',
+      last_reset_date: new Date().toISOString(),
+      smooth_last_reset_date: new Date().toISOString(),
+      premium_since: new Date().toISOString(),
+      bonus_days: 0
+    });
+  }
+
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -186,44 +241,88 @@ export async function POST(req: Request) {
   const role = session.user.role;
 
   try {
-    let usage = await getOrCreateUsage(discordId, role);
-    const limit = role === 'partner' ? 999999 : (role === 'premium' ? 5 : 3);
-    
-    // One more check in case it was reset right now
-    const lastReset = new Date(usage.last_reset_date);
+    const body = await req.json().catch(() => ({}));
+    const reqType = body.type || 'quality';
+
+    let usageData = await getOrCreateUsage(discordId, role);
     const now = new Date();
-    const diffHours = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
 
-    if ((role === 'free' && diffHours >= 7 * 24) || (role === 'premium' && diffHours >= 24)) {
-      usage.usage_count = 0;
-      usage.last_reset_date = now.toISOString();
+    const limit = role === 'partner' ? 999999 : (role === 'premium' ? 5 : 3);
+    const smooth_limit = role === 'partner' || role === 'premium' ? 999999 : 1;
+
+    if (reqType === 'smooth') {
+      const smoothLastReset = usageData.smooth_last_reset_date ? new Date(usageData.smooth_last_reset_date) : new Date(0);
+      const smoothDiffHours = (now.getTime() - smoothLastReset.getTime()) / (1000 * 60 * 60);
+
+      if ((role === 'free' && smoothDiffHours >= 24) || (role === 'premium' && smoothDiffHours >= 24)) {
+        usageData.smooth_usage_count = 0;
+        usageData.smooth_last_reset_date = now.toISOString();
+      }
+
+      const currentUsage = usageData.smooth_usage_count || 0;
+      if (currentUsage >= smooth_limit) {
+        return NextResponse.json({ error: 'Smooth FPS limit exceeded' }, { status: 403 });
+      }
+
+      const { data, error } = await supabase
+        .from('aura_web_usage')
+        .update({ 
+          smooth_usage_count: currentUsage + 1,
+          smooth_last_reset_date: usageData.smooth_last_reset_date || now.toISOString()
+        })
+        .eq('discord_id', discordId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return NextResponse.json({
+        success: true,
+        usage: data.usage_count,
+        limit,
+        smooth_usage: data.smooth_usage_count,
+        smooth_limit,
+        role,
+        last_reset_date: data.last_reset_date,
+        smooth_last_reset_date: data.smooth_last_reset_date
+      });
+    } else {
+      // Quality logic
+      const lastReset = new Date(usageData.last_reset_date);
+      const diffHours = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
+
+      if ((role === 'free' && diffHours >= 7 * 24) || (role === 'premium' && diffHours >= 24)) {
+        usageData.usage_count = 0;
+        usageData.last_reset_date = now.toISOString();
+      }
+
+      if (usageData.usage_count >= limit) {
+        return NextResponse.json({ error: 'AURA Quality limit exceeded' }, { status: 403 });
+      }
+
+      const { data, error } = await supabase
+        .from('aura_web_usage')
+        .update({ 
+          usage_count: usageData.usage_count + 1,
+          last_reset_date: usageData.last_reset_date
+        })
+        .eq('discord_id', discordId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return NextResponse.json({
+        success: true,
+        usage: data.usage_count,
+        limit,
+        smooth_usage: data.smooth_usage_count || 0,
+        smooth_limit,
+        role,
+        last_reset_date: data.last_reset_date,
+        smooth_last_reset_date: data.smooth_last_reset_date
+      });
     }
-
-    if (usage.usage_count >= limit) {
-      return NextResponse.json({ error: 'Limit exceeded' }, { status: 403 });
-    }
-
-    const { data, error } = await supabase
-      .from('aura_web_usage')
-      .update({ 
-        usage_count: usage.usage_count + 1,
-        last_reset_date: usage.last_reset_date
-      })
-      .eq('discord_id', discordId)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json({
-      success: true,
-      usage: data.usage_count,
-      limit,
-      role,
-      last_reset_date: data.last_reset_date,
-      premium_since: data.premium_since,
-      bonus_days: data.bonus_days
-    });
   } catch (err: any) {
     console.error('Supabase POST error:', err.message);
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
