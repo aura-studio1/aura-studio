@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
     
     const rawBody = await req.text();
-    const isValidRequest = verifyKey(rawBody, signature, timestamp, DISCORD_PUBLIC_KEY);
+    const isValidRequest = await verifyKey(rawBody, signature, timestamp, DISCORD_PUBLIC_KEY);
     
     if (!isValidRequest) {
         return new NextResponse('Bad request signature', { status: 401 });
