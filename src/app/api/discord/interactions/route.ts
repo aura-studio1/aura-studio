@@ -42,13 +42,21 @@ export async function POST(req: NextRequest) {
                 });
             }
             
-            // Note: In serverless functions, you technically have 3 seconds to respond to Discord.
-            // Since fetching video headers might take 1-2 seconds, it fits within 3 seconds,
-            // but if it timeouts, Discord will show "The application did not respond".
-            // A more robust way is to DEFER (type 5) and edit the response later, 
-            // but let's try responding directly first for simplicity.
+            // Aggressive global timeout for Discord
+            const timeoutPromise = new Promise<any>((resolve) => {
+                setTimeout(() => {
+                    resolve({
+                        type: 4,
+                        data: { content: '⏳ TikTok API is taking too long! Please try again or use the Recheck button.', flags: 64 }
+                    });
+                }, 2200); // 2.2s timeout to guarantee Discord's 3.0s deadline is met
+            });
             
-            const responseData = await processCheckCommand(urlOption.value);
+            const responseData = await Promise.race([
+                processCheckCommand(urlOption.value),
+                timeoutPromise
+            ]);
+            
             return NextResponse.json(responseData);
         }
     }
@@ -61,10 +69,27 @@ export async function POST(req: NextRequest) {
             const url = interaction.message.content;
             
             if (url) {
-                const responseData = await processCheckCommand(url);
-                // processCheckCommand returns type: 4 (ChannelMessageWithSource), 
-                // but for components we want type: 7 (UpdateMessage)
-                responseData.type = 7;
+                const timeoutPromise = new Promise<any>((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            type: 4,
+                            data: { content: '⏳ TikTok API is taking too long! Please try again.', flags: 64 }
+                        });
+                    }, 2200);
+                });
+                
+                const responseData = await Promise.race([
+                    processCheckCommand(url),
+                    timeoutPromise
+                ]);
+                
+                // If it timed out, it will be type: 4 (ephemeral message)
+                // If it succeeded, it will be type: 4 from processCheckCommand, 
+                // but for components we want type: 7 (UpdateMessage) if it succeeded!
+                if (!responseData.data.flags) {
+                    responseData.type = 7;
+                }
+                
                 return NextResponse.json(responseData);
             } else {
                 return NextResponse.json({
@@ -77,4 +102,3 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ error: 'Unknown interaction type' }, { status: 400 });
 }
-
