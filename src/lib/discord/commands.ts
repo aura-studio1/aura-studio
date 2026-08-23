@@ -98,23 +98,18 @@ function generateMockQualities(ttData: any, meta: any) {
         const hdSizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
         const hdMbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n> 🌐 📱 adapt_lowest_1080_1 📱 play_addr_bytevc1\n> ${height}p${fps} • ${hdMbps} Mbps • hevc • ${hdSizeMB} MB\n>`;
+        qualityStr += `\n\`\`\`\n🌐 📱 play_addr 🌐 📱 original_1080_0\n1080p60 • ${hdMbps} Mbps • h264 • ${hdSizeMB} MB\n\`\`\``;
     }
     
-    if (ttData.play && ttData.size) {
+    if (ttData.play && ttData.size && !ttData.hdplay) {
         const sizeMB = (ttData.size / (1024 * 1024)).toFixed(1);
         const mbps = (((ttData.size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n> 🌐 📱 play_addr 🌐 normal_720_0 📱 play_addr_h264\n> 720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n>`;
+        qualityStr += `\n\`\`\`\n🌐 📱 play_addr\n720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n\`\`\``;
     }
     
-    if (ttData.wmplay && ttData.wm_size) {
-        const wmSizeMB = (ttData.wm_size / (1024 * 1024)).toFixed(1);
-        const wmMbps = (((ttData.wm_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
-        
-        qualityStr += `\n> 📱 comet_720_1\n> 720p${fps} • ${wmMbps} Mbps • hevc • ${wmSizeMB} MB`;
-    }
-
+    // We don't strictly need wmplay section if we are matching the Telegram screenshot exactly
+    
     // Default VQ Score based on sizes (mock)
     const vqScore = ttData.hdplay ? (60 + Math.random() * 10).toFixed(2) : '0';
 
@@ -138,11 +133,12 @@ export async function processCheckCommand(url: string) {
         
         // Mocks based on hashtags
         let categories = '';
-        if (ttData.title.toLowerCase().includes('game') || ttData.title.toLowerCase().includes('cod')) {
+        const titleLower = ttData.title ? ttData.title.toLowerCase() : '';
+        if (titleLower.includes('game') || titleLower.includes('cod') || titleLower.includes('freefire') || titleLower.includes('ฟีฟาย')) {
             categories = "| Video Games\n| Games\n| Entertainment";
         }
 
-        const { qualityStr, originalRes, originalFps, vqScore, height, fps } = generateMockQualities(ttData, meta);
+        const { qualityStr, height, fps } = generateMockQualities(ttData, meta);
 
         // Build Discord Embed matching the screenshot exactly
         return {
@@ -169,18 +165,15 @@ export async function processCheckCommand(url: string) {
                             },
                             {
                                 name: "⭐ Quality",
-                                value: `• 🌐 Browser | ${height}p${fps}\n• 📱 Phone | 1080p${fps}\n${qualityStr}\n\n| Original | ${originalRes}\n| VQ Score | ${vqScore}`,
+                                value: `• 🌐 Browser | ${height}p${fps}\n• 📱 Phone | 1080p${fps}\n${qualityStr}`,
                                 inline: false
                             },
                             ...(categories ? [{
-                                name: "🏷️ Categories",
+                                name: "📝 Categories",
                                 value: categories,
                                 inline: false
                             }] : [])
-                        ],
-                        footer: {
-                            text: "re:TT Checker & Downloader",
-                        }
+                        ]
                     }
                 ],
                 components: [
