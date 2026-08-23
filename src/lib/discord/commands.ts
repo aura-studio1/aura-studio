@@ -84,12 +84,15 @@ function getFlagEmoji(countryCode: string) {
 }
 
 function generateMockQualities(ttData: any, meta: any) {
-    const originalRes = meta ? `${meta.width}x${meta.height}` : '1080x1440';
-    const originalFps = meta ? meta.fps : 30;
+    const originalRes = meta ? `${meta.width}x${meta.height}` : (ttData.title?.toLowerCase().includes('game') ? '1920x1080' : '1080x1920');
+    const originalFps = meta ? meta.fps : 60;
+    const vqScore = meta?.vqScore ? meta.vqScore : (60 + Math.random() * 15).toFixed(2);
         
     // Fallback if no meta
-    const height = meta ? meta.height : 1080;
-    const fps = meta ? meta.fps : 60;
+    const fps = meta ? meta.fps : (ttData.title?.toLowerCase().includes('game') ? 60 : 30);
+    
+    const phoneRes = ttData.hdplay ? `1080p${fps}` : `720p${fps}`;
+    const browserRes = ttData.play ? `720p${fps}` : `1080p${fps}`;
     
     // We will build the blockquote with Mock formats based on HD vs Normal play
     let qualityStr = '';
@@ -98,15 +101,23 @@ function generateMockQualities(ttData: any, meta: any) {
         const hdSizeMB = (ttData.hd_size / (1024 * 1024)).toFixed(1);
         const hdMbps = (((ttData.hd_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n❝ 🌐 📱 play_addr 🌐 📱 original_1080_0 ❞\n1080p60 • ${hdMbps} Mbps • h264 • ${hdSizeMB} MB`;
-    } else if (ttData.play && ttData.size) {
+        qualityStr += `\n❝ 🌐 📱 adapt_lowest_1080_1 ❞\n1080p${fps} • ${hdMbps} Mbps • hevc • ${hdSizeMB} MB\n`;
+    } 
+    
+    if (ttData.play && ttData.size) {
         const sizeMB = (ttData.size / (1024 * 1024)).toFixed(1);
         const mbps = (((ttData.size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
         
-        qualityStr += `\n❝ 🌐 📱 play_addr ❞\n720p30 • ${mbps} Mbps • h264 • ${sizeMB} MB`;
+        qualityStr += `\n❝ 🌐 📱 play_addr 🌐 normal_720_0 📱 play_addr_h264 ❞\n720p${fps} • ${mbps} Mbps • h264 • ${sizeMB} MB\n`;
     }
     
-    return { qualityStr, originalRes, originalFps, height, fps };
+    if (ttData.wmplay && ttData.wm_size) {
+        const wmSizeMB = (ttData.wm_size / (1024 * 1024)).toFixed(1);
+        const wmMbps = (((ttData.wm_size * 8) / (ttData.duration * 1000 * 1000))).toFixed(1);
+        qualityStr += `\n❝ 📱 adapt_lower_720_1 ❞\n720p${fps} • ${wmMbps} Mbps • hevc • ${wmSizeMB} MB\n`;
+    }
+    
+    return { qualityStr: qualityStr.trimEnd(), originalRes, originalFps, vqScore, phoneRes, browserRes };
 }
 
 export async function processCheckCommand(url: string) {
@@ -141,7 +152,7 @@ export async function processCheckCommand(url: string) {
             categories = "| Video Games\n| Games\n| Entertainment";
         }
 
-        const { qualityStr, originalRes, height, fps } = generateMockQualities(ttData, meta);
+        const { qualityStr, originalRes, vqScore, phoneRes, browserRes } = generateMockQualities(ttData, meta);
 
         // Build Discord Embed matching the screenshot exactly
         return {
@@ -168,7 +179,7 @@ export async function processCheckCommand(url: string) {
                             },
                             {
                                 name: "⭐ Quality",
-                                value: `• 🌐 Browser | ${height}p${fps}\n• 📱 Phone | 1080p${fps}\n${qualityStr}\n\n| Original | ${originalRes}`,
+                                value: `• 🌐 Browser | ${browserRes}\n• 📱 Phone | ${phoneRes}\n${qualityStr}\n\n| Original | ${originalRes}\n| VQ Score | ${vqScore}`,
                                 inline: false
                             },
                             ...(categories ? [{
