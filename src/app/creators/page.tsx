@@ -32,7 +32,7 @@ export default function CreatorsPage() {
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
     cardRefs.current.forEach((ref) => {
@@ -40,7 +40,7 @@ export default function CreatorsPage() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [creators]);
 
   return (
     <div className="min-h-screen bg-[#06040A] text-white font-sans overflow-x-hidden selection:bg-[#7e22ce] selection:text-white relative">
