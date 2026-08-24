@@ -21,6 +21,35 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = account.access_token;
         // @ts-ignore
         token.id = profile.id;
+
+        // Fetch Discord Roles on Sign-In
+        const guildId = process.env.DISCORD_GUILD_ID;
+        const botToken = process.env.DISCORD_BOT_TOKEN;
+        const partnerRoleId = process.env.DISCORD_PARTNER_ROLE_ID;
+        const premiumRoleId = process.env.DISCORD_PREMIUM_ROLE_ID;
+        const freeRoleId = process.env.DISCORD_FREE_ROLE_ID;
+
+        // @ts-ignore
+        if (guildId && botToken && token.id) {
+          try {
+            const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${token.id}`, {
+              headers: { Authorization: `Bot ${botToken}` },
+            });
+            if (res.ok) {
+              const memberData = await res.json();
+              const roles: string[] = memberData.roles || [];
+              if (partnerRoleId && roles.includes(partnerRoleId)) {
+                token.discordRole = "partner";
+              } else if (premiumRoleId && roles.includes(premiumRoleId)) {
+                token.discordRole = "premium";
+              } else if (freeRoleId && roles.includes(freeRoleId)) {
+                token.discordRole = "free";
+              }
+            }
+          } catch (error) {
+            console.error("Failed to fetch Discord roles during sign-in:", error);
+          }
+        }
       }
       
       // Fetch user data from your custom aura_web_usage table
@@ -35,8 +64,7 @@ export const authOptions: NextAuthOptions = {
               if (data && !error) {
                   token.supabaseRole = data.role;
               } else if (error && error.code === 'PGRST116') {
-                  // User doesn't exist in the table yet, we can optionally auto-insert them here
-                  // But for now, we just skip it
+                  // User doesn't exist in the table yet
               }
           } catch(e) { console.error("Supabase fetch error:", e); }
       }
@@ -50,50 +78,28 @@ export const authOptions: NextAuthOptions = {
       let userRole = "member";
       let hasAccess = false;
 
-      // 1. ตรวจสอบยศจากฐานข้อมูล Supabase ก่อน (aura_web_usage)
-      if (token.supabaseRole === 'premium') {
+      // 1. Check Discord Role (Highest Priority for Partner)
+      if (token.discordRole === 'partner') {
+          hasAccess = true;
+          userRole = "partner";
+      } 
+      // 2. Check Supabase (Priority for Premium)
+      else if (token.supabaseRole === 'premium') {
           hasAccess = true;
           userRole = "premium";
-      } else if (token.supabaseRole === 'free') {
+      }
+      else if (token.discordRole === 'premium') {
+          hasAccess = true;
+          userRole = "premium";
+      }
+      // 3. Check Free
+      else if (token.supabaseRole === 'free') {
           hasAccess = true;
           userRole = "free";
       }
-
-      // 2. ถ้าไม่ได้สิทธิ์จาก Database ค่อยไปเช็คจาก Discord (ระบบเก่า)
-      const guildId = process.env.DISCORD_GUILD_ID;
-      const botToken = process.env.DISCORD_BOT_TOKEN;
-      const partnerRoleId = process.env.DISCORD_PARTNER_ROLE_ID;
-      const premiumRoleId = process.env.DISCORD_PREMIUM_ROLE_ID;
-      const freeRoleId = process.env.DISCORD_FREE_ROLE_ID;
-
-      // @ts-ignore
-      if (!hasAccess && guildId && botToken && token.id) {
-        try {
-          const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${token.id}`, {
-            headers: {
-              Authorization: `Bot ${botToken}`,
-            },
-          });
-
-          if (res.ok) {
-            const memberData = await res.json();
-            const roles: string[] = memberData.roles || [];
-            
-            // เช็คว่า User มียศ Partner, Premium หรือ Free
-            if (partnerRoleId && roles.includes(partnerRoleId)) {
-              hasAccess = true;
-              userRole = "partner";
-            } else if (premiumRoleId && roles.includes(premiumRoleId)) {
-              hasAccess = true;
-              userRole = "premium";
-            } else if (freeRoleId && roles.includes(freeRoleId)) {
-              hasAccess = true;
-              userRole = "free";
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch Discord roles:", error);
-        }
+      else if (token.discordRole === 'free') {
+          hasAccess = true;
+          userRole = "free";
       }
 
       // @ts-ignore
