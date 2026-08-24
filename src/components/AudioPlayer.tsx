@@ -100,7 +100,7 @@ export default function AudioPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} src="/bgm.mp3" loop />
+      <audio ref={audioRef} src="/bgm.mp3?v=2" loop />
       
       <div 
         className={`fixed bottom-6 right-6 md:left-6 md:right-auto z-50 flex items-center gap-2 p-2 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 border ${
