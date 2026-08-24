@@ -5,52 +5,20 @@ import Link from "next/link";
 import { ArrowLeft, Sparkles, Share2, Link as LinkIcon, ExternalLink, Star } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
-const creators = [
-  {
-    name: "ฟาราฟลุ๊คกี้",
-    handle: "falafloukgie",
-    initial: "F",
-    color: "#ddbc76",
-    glowClass: "glass-gold",
-    following: "81",
-    followers: "39.6K",
-    likes: "3.2M",
-    tiktok: "https://www.tiktok.com/@falafloukgie",
-    bio: <><span>@เอม ✨ 🧸</span><br/><span>ตัดคลิป ~~ Dm</span></>,
-    link: { text: "e-z.bio/falafloukgie", href: "#" },
-  },
-  {
-    name: "SUPER-PIGGG",
-    handle: "teentuner",
-    initial: "T",
-    color: "#3b82f6",
-    glowClass: "glass-card",
-    following: "270",
-    followers: "2035",
-    likes: "51.9K",
-    tiktok: "https://www.tiktok.com/@teentuner",
-    bio: <><span>120 FPS</span><br/><span>D M</span><br/><span>⬇️โดเนทขึ้นจอ⬇️</span></>,
-    link: { text: "ezdn.app/teentuner", href: "#" },
-  },
-  {
-    name: "LEX.JANACK.",
-    handle: "saran14323",
-    initial: "S",
-    color: "#7e22ce",
-    glowClass: "glass-purple",
-    following: "122",
-    followers: "1650",
-    likes: "117.8K",
-    tiktok: "https://www.tiktok.com/@saran14323",
-    bio: <span>LEX DIWA 🔥🔥</span>,
-    link: null,
-  },
-];
-
 export default function CreatorsPage() {
   const { t, lang, setLang } = useLanguage();
+  const [creators, setCreators] = useState<any[]>([]);
   const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
+
+  useEffect(() => {
+    fetch('/api/creators')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCreators(data);
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -136,83 +104,44 @@ export default function CreatorsPage() {
         </p>
 
         {/* Creator Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
           {creators.map((creator, i) => (
-            <div
-              key={creator.handle}
+            <a
+              href={creator.tiktok_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={creator.id}
               ref={(el) => { cardRefs.current[i] = el; }}
-              className={`flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 p-8 rounded-[28px] ${creator.glowClass} 
-                hover:shadow-[0_0_50px_${creator.color}20] transition-all duration-500 group relative overflow-hidden
+              className={`p-4 md:p-6 rounded-[32px] ${creator.glow_class} 
+                hover:shadow-[0_0_50px_${creator.color}30] transition-all duration-500 group relative overflow-hidden block
                 ${visibleCards.has(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-                ${i === creators.length - 1 && creators.length % 2 !== 0 ? 'lg:col-span-2 xl:col-span-1' : ''}
               `}
               style={{ transitionDuration: '700ms', transitionDelay: `${i * 150}ms` }}
             >
-              {/* Hover Glow */}
-              <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full opacity-0 group-hover:opacity-100 blur-[80px] pointer-events-none transition-opacity duration-500"
-                style={{ background: `radial-gradient(circle, ${creator.color}15, transparent)` }}
+              {/* Hover Glow Background */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full opacity-0 group-hover:opacity-100 blur-[80px] pointer-events-none transition-opacity duration-500"
+                style={{ background: `radial-gradient(circle, ${creator.color}25, transparent)` }}
               />
               
-              {/* Avatar */}
-              <div className="w-24 h-24 md:w-32 md:h-32 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
-                  style={{ background: `radial-gradient(circle, ${creator.color}40, transparent)` }}
-                />
-                <div className="w-full h-full rounded-full border-[3px] border-white/10 group-hover:border-white/20 relative z-10 flex items-center justify-center bg-gradient-to-br from-[#1A1525] to-[#0A0710] overflow-hidden shadow-lg transition-all duration-300">
-                  <div className="absolute inset-0 blur-xl rounded-full" style={{ background: `${creator.color}15` }} />
-                  <span className="text-4xl md:text-5xl font-black drop-shadow-lg relative z-10"
-                    style={{ color: creator.color }}
-                  >
-                    {creator.initial}
-                  </span>
-                </div>
-              </div>
-              
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left relative z-10 w-full">
-                 <div className="flex flex-col xl:flex-row items-center gap-2 xl:gap-3 mb-3">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white whitespace-nowrap">{creator.name}</h2>
-                    <span className="hidden xl:inline text-white/20">|</span>
-                    <span className="text-sm md:text-base text-white/80 font-semibold transition-colors"
-                      style={{ color: undefined }}
-                    >
-                      {creator.handle}
-                    </span>
-                 </div>
+              {/* Image Container */}
+              <div className="w-full relative rounded-[20px] overflow-hidden border border-white/5 shadow-2xl group-hover:border-white/20 transition-all duration-500 bg-black">
+                 <img 
+                    src={creator.image_url} 
+                    alt="TikTok Profile" 
+                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                 />
                  
-                 <div className="flex items-center justify-center md:justify-start gap-4 mb-5 text-white/80 text-sm whitespace-nowrap">
-                    <div><strong className="text-white text-base">{creator.following}</strong> กำลังติดตาม</div>
-                    <div><strong className="text-white text-base">{creator.followers}</strong> ผู้ติดตาม</div>
-                    <div><strong className="text-white text-base">{creator.likes}</strong> ถูกใจ</div>
-                 </div>
-
-                 <div className="flex items-center justify-center md:justify-start gap-3 mb-5">
-                    <a href={creator.tiktok} target="_blank" rel="noopener noreferrer" 
-                      className="px-6 py-2.5 font-bold rounded-xl transition-all duration-300 flex items-center gap-2 text-sm whitespace-nowrap hover:-translate-y-0.5"
-                      style={{ 
-                        background: i === 0 ? '#ddbc76' : 'rgba(255,255,255,0.08)',
-                        color: i === 0 ? 'black' : 'white',
-                        border: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                        boxShadow: i === 0 ? '0 0 20px rgba(221,188,118,0.3)' : 'none',
-                      }}
-                    >
-                       เข้าสู่หน้า TikTok <ExternalLink className="w-4 h-4" />
-                    </a>
-                    <button className="w-10 h-10 rounded-xl btn-glass flex items-center justify-center shrink-0">
-                      <Share2 className="w-4 h-4 text-white" />
-                    </button>
-                 </div>
-
-                 <div className="text-sm text-gray-300 leading-relaxed text-left max-w-lg mx-auto md:mx-0">
-                    {creator.bio}
-                    {creator.link && (
-                      <a href={creator.link.href} className="font-bold flex items-center gap-1.5 mt-2 hover:text-[#ddbc76] transition w-fit text-white">
-                        <LinkIcon className="w-3 h-3"/> {creator.link.text}
-                      </a>
-                    )}
+                 {/* Click Overlay */}
+                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                       <div className="w-14 h-14 rounded-full glass flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                          <ExternalLink className="w-6 h-6 text-white" />
+                       </div>
+                       <span className="font-bold text-white tracking-widest text-sm uppercase text-shadow">Visit TikTok</span>
+                    </div>
                  </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
 
