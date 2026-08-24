@@ -41,27 +41,5 @@ export default function Home() {
     );
   }
 
-  if (!session) {
-    return <LandingPage />;
-  }
-
-  // Check roles
-  // @ts-ignore
-  const hasAccess = session?.user?.hasAccess === true;
-
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#06040A] text-white text-center p-6">
-        <div className="glass-card rounded-[28px] p-12 max-w-lg">
-          <h1 className="text-3xl font-bold text-red-400 mb-4">ACCESS DENIED</h1>
-          <p className="text-gray-400 mb-6">You do not have the required Discord role to use this application.</p>
-          <button onClick={() => signOut()} className="px-6 py-3 btn-glass rounded-xl">
-            Sign Out
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return <Dashboard session={session} />;
+  return <LandingPage />;
 }
