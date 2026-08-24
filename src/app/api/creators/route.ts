@@ -16,7 +16,6 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      // If table doesn't exist yet, return empty array to prevent crashing
       if (error.code === '42P01') {
         return NextResponse.json([]);
       }
@@ -49,6 +48,39 @@ export async function POST(req: Request) {
           order_index: body.order_index || 0
         }
       ])
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    if (!session || session.user?.role !== 'partner') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { id, image_url, tiktok_url, color, glow_class, order_index } = body;
+
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+
+    const { data, error } = await supabase
+      .from('aura_creators')
+      .update({
+        image_url,
+        tiktok_url,
+        color,
+        glow_class,
+        order_index
+      })
+      .eq('id', id)
       .select()
       .single();
 
