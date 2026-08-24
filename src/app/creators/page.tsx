@@ -96,53 +96,72 @@ export default function CreatorsPage() {
         </div>
 
         {/* Title */}
-        <h1 className="mt-8 text-4xl md:text-6xl font-black mb-6 animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
-          <span className="text-gradient-gold">{t("creators.title")}</span>
-        </h1>
-        <p className="text-gray-400 max-w-2xl mx-auto text-base md:text-lg mb-20 animate-fade-in-up stagger-2" style={{ opacity: 0 }}>
+        <div className="relative animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
+           <div className="absolute inset-0 blur-[100px] opacity-40 bg-gradient-to-r from-transparent via-[#ddbc76] to-transparent pointer-events-none" />
+           <h1 className="mt-8 text-5xl md:text-7xl font-black mb-6 tracking-tight relative z-10">
+             <span className="text-transparent bg-clip-text bg-gradient-to-br from-[#f3d99f] via-[#ddbc76] to-[#8a681c] drop-shadow-[0_0_30px_rgba(221,188,118,0.3)]">
+               {t("creators.title")}
+             </span>
+           </h1>
+        </div>
+        <p className="text-gray-400 max-w-2xl mx-auto text-lg md:text-xl mb-24 animate-fade-in-up stagger-2 leading-relaxed" style={{ opacity: 0 }}>
           {t("creators.desc")}
         </p>
 
         {/* Creator Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
-          {creators.map((creator, i) => (
-            <a
-              href={creator.tiktok_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              key={creator.id}
-              ref={(el) => { cardRefs.current[i] = el; }}
-              className={`p-4 md:p-6 rounded-[32px] ${creator.glow_class} 
-                hover:shadow-[0_0_50px_${creator.color}30] transition-all duration-500 group relative overflow-hidden block
-                ${visibleCards.has(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-              `}
-              style={{ transitionDuration: '700ms', transitionDelay: `${i * 150}ms` }}
-            >
-              {/* Hover Glow Background */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full opacity-0 group-hover:opacity-100 blur-[80px] pointer-events-none transition-opacity duration-500"
-                style={{ background: `radial-gradient(circle, ${creator.color}25, transparent)` }}
-              />
-              
-              {/* Image Container */}
-              <div className="w-full relative rounded-[20px] overflow-hidden border border-white/5 shadow-2xl group-hover:border-white/20 transition-all duration-500 bg-black">
-                 <img 
-                    src={creator.image_url} 
-                    alt="TikTok Profile" 
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                 />
-                 
-                 {/* Click Overlay */}
-                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                       <div className="w-14 h-14 rounded-full glass flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                          <ExternalLink className="w-6 h-6 text-white" />
-                       </div>
-                       <span className="font-bold text-white tracking-widest text-sm uppercase text-shadow">Visit TikTok</span>
-                    </div>
-                 </div>
-              </div>
-            </a>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 max-w-5xl mx-auto w-full relative z-10 pb-20">
+          {creators.map((creator, i) => {
+            const isEven = i % 2 === 0;
+            return (
+              <a
+                href={creator.tiktok_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                key={creator.id}
+                ref={(el) => { cardRefs.current[i] = el; }}
+                className={`p-4 md:p-6 rounded-[32px] ${creator.glow_class} 
+                  transition-all duration-700 group relative overflow-hidden block
+                  ${visibleCards.has(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}
+                  hover:-translate-y-3 hover:scale-[1.02]
+                  ${!isEven ? 'md:mt-16' : ''}
+                `}
+                style={{ 
+                  transitionDelay: `${(i % 2) * 150}ms`,
+                  boxShadow: `0 20px 40px -20px ${creator.color}40`,
+                  border: `1px solid ${creator.color}20`
+                }}
+              >
+                {/* Ambient background glow inside the card */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                  style={{ background: `radial-gradient(circle at 50% 0%, ${creator.color}20, transparent 70%)` }}
+                />
+                
+                {/* Image Container */}
+                <div className="w-full relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition-all duration-500 bg-[#0A0710] shadow-2xl">
+                   
+                   {/* Gradient overlay at bottom to blend image into card */}
+                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0A0710] to-transparent z-10 pointer-events-none opacity-80 group-hover:opacity-30 transition-opacity duration-700" />
+
+                   <img 
+                      src={creator.image_url} 
+                      alt="TikTok Profile" 
+                      className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out brightness-90 group-hover:brightness-110"
+                   />
+                   
+                   {/* Floating Button on hover */}
+                   <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
+                      <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.2)] text-white scale-75 group-hover:scale-100 transition-transform duration-500 ease-out delay-75">
+                         <span className="font-bold tracking-widest text-sm uppercase text-shadow">Visit Channel</span>
+                         <ExternalLink className="w-4 h-4" />
+                      </div>
+                   </div>
+                   
+                   {/* Corner Accent */}
+                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none mix-blend-overlay" />
+                </div>
+              </a>
+            );
+          })}
         </div>
 
         {/* CTA */}
