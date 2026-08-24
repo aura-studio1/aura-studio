@@ -468,10 +468,10 @@ export default function Dashboard({ session }: { session: any }) {
           <>
             <video 
               src={videoUrl} 
-              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[60px] z-0 mix-blend-screen transition-opacity duration-1000"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 blur-[24px] z-0 transition-opacity duration-1000"
               autoPlay loop muted playsInline
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#06040A]/50 to-[#06040A] z-0" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#06040A]/20 to-[#06040A]/90 z-0 pointer-events-none" />
           </>
         )}
         
@@ -486,12 +486,6 @@ export default function Dashboard({ session }: { session: any }) {
                   <>AURA <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]">SMOOTH FPS</span></>
                 )}
               </h2>
-              <p className="text-gray-400 text-base font-medium max-w-xl leading-relaxed">
-                {activeTab === 'quality' 
-                  ? (lang === 'th' ? 'ระบบแพตช์ไฟล์ MP4 ระดับ Binary เพื่อปลดล็อกข้อจำกัดการบีบอัดวิดีโอ ให้ได้คุณภาพสูงสุดบนโซเชียลมีเดีย' : 'Binary-level MP4 patcher to unlock video compression limits for maximum quality on social media.')
-                  : (lang === 'th' ? 'ระบบแทรกเฟรมเรตอัจฉริยะ แปลงวิดีโอของคุณให้ลื่นไหลระดับ 60FPS แบบไม่มีสะดุด' : 'Intelligent frame interpolation to convert your videos to ultra-smooth 60FPS.')
-                }
-              </p>
             </header>
 
             {/* Drag & Drop Zone */}
