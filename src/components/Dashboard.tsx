@@ -468,10 +468,10 @@ export default function Dashboard({ session }: { session: any }) {
           <>
             <video 
               src={videoUrl} 
-              className="absolute inset-0 w-full h-full object-cover opacity-40 blur-[24px] z-0 transition-opacity duration-1000"
+              className="absolute inset-0 w-full h-full object-cover opacity-60 blur-[8px] z-0 transition-opacity duration-1000"
               autoPlay loop muted playsInline
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#06040A]/20 to-[#06040A]/90 z-0 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#06040A]/10 to-[#06040A]/90 z-0 pointer-events-none" />
           </>
         )}
         
@@ -503,7 +503,7 @@ export default function Dashboard({ session }: { session: any }) {
                  <div className={`absolute inset-0 opacity-20 blur-2xl z-0 ${activeTab === 'quality' ? 'bg-[#ddbc76]' : 'bg-[#3b82f6]'}`} />
                )}
 
-               <div className="bg-[#0A0710]/90 backdrop-blur-md rounded-[30px] p-8 md:p-16 flex flex-col items-center justify-center text-center relative z-20 min-h-[300px]">
+               <div className="bg-[#0A0710]/40 backdrop-blur-md rounded-[30px] p-8 md:p-16 flex flex-col items-center justify-center text-center relative z-20 min-h-[300px]">
                   {!file ? (
                     <>
                       <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-2xl transition-transform duration-500 ${isDragOver ? 'scale-110' : ''} ${activeTab === 'quality' ? 'bg-[#ddbc76]/10 text-[#ddbc76] shadow-[#ddbc76]/20' : 'bg-[#3b82f6]/10 text-[#3b82f6] shadow-[#3b82f6]/20'}`}>
