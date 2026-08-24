@@ -12,11 +12,12 @@ export async function POST(req: Request) {
   try {
     // 1. เช็คว่าลูกค้า Login หรือยัง
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !session.user.id) {
+    // @ts-ignore
+    if (!session || !session.user || !(session.user as any).id) {
       return NextResponse.json({ message: "กรุณาเข้าสู่ระบบก่อนทำรายการ" }, { status: 401 });
     }
 
-    const discordId = session.user.id;
+    const discordId = (session.user as any).id;
 
     // 2. ดึงรูปสลิปที่อัปโหลดมา
     const formData = await req.formData();
