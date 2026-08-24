@@ -317,330 +317,371 @@ export default function Dashboard({ session }: { session: any }) {
   const quotaPercent = usageInfo ? Math.round((currentUsage / currentLimit) * 100) : 0;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-[#06040A] text-white p-3 md:p-4 font-sans overflow-x-hidden md:overflow-hidden relative mesh-bg noise">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-[#06040A] text-white p-3 md:p-6 font-sans overflow-x-hidden md:overflow-hidden relative mesh-bg noise">
       {/* Ambient Orbs */}
       <div className="orb orb-purple w-[400px] h-[400px] top-[-10%] left-[-5%] animate-pulse-glow" />
       <div className="orb orb-blue w-[350px] h-[350px] bottom-[-10%] right-[-5%] animate-pulse-glow" style={{ animationDelay: "2s" }} />
 
-      {/* SIDEBAR */}
-      <div className="w-full md:w-[260px] glass-card rounded-[28px] flex flex-col p-5 mb-4 md:mb-0 mr-0 md:mr-4 z-10 relative shrink-0">
-        {/* Logo + Member Badge */}
-        <div className="flex flex-col items-center mb-6 mt-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#ddbc76] to-[#aa8323] rounded-2xl flex items-center justify-center mb-3 glow-gold">
-             <span className="text-2xl font-black text-black">A</span>
+      {/* ====== SIDEBAR ====== */}
+      <div className="w-full md:w-[280px] bg-[#0A0710]/80 backdrop-blur-3xl border border-white/5 rounded-[32px] flex flex-col p-5 mb-4 md:mb-0 mr-0 md:mr-6 z-10 relative shrink-0 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-8 px-2 mt-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ddbc76] via-[#d4af37] to-[#aa8323] flex items-center justify-center shadow-[0_0_20px_rgba(221,188,118,0.3)]">
+            <span className="font-black text-black text-xl">A</span>
           </div>
-          <h2 className="text-lg font-bold tracking-widest text-gradient-gold">AURA</h2>
-          <div className={`mt-2 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${session?.user?.role === 'partner' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] border border-blue-400' : 'glass-gold text-[#ddbc76]'}`}>
-            {session?.user?.role === 'partner' ? 'PARTNER' : (session?.user?.role === "premium" ? t("dash.premium") : "MEMBER")}
+          <div>
+            <span className="font-bold tracking-widest text-lg text-gradient-gold leading-none">AURA</span>
+            <div className="text-[9px] text-gray-500 font-bold tracking-[0.2em] uppercase mt-0.5">Workspace</div>
           </div>
-          {session?.user?.role === "premium" && premiumExpiry && (
-            <span className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {premiumExpiry}
-            </span>
-          )}
         </div>
 
-        {/* Quota Ring */}
-        {usageInfo && usageInfo.role !== 'partner' && (
-          <div className="glass-card rounded-2xl p-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12 shrink-0">
-                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
-                  <circle
-                    cx="18" cy="18" r="15" fill="none"
-                    stroke={quotaPercent >= 100 ? '#ef4444' : '#ddbc76'}
-                    strokeWidth="3"
-                    strokeDasharray={`${quotaPercent} 100`}
-                    strokeLinecap="round"
-                    className="transition-all duration-500"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black">
-                  {currentUsage}/{currentLimit > 999 ? '∞' : currentLimit}
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Quota</p>
-                {timeLeft && (
-                  <p className="text-[10px] text-[#ddbc76] font-bold flex items-center gap-1 mt-0.5">
-                    <Zap className="w-3 h-3" /> {timeLeft}
-                  </p>
-                )}
-              </div>
+        {/* Premium Plan Card */}
+        <div className="relative rounded-2xl overflow-hidden mb-6 p-[1px] group">
+          <div className={`absolute inset-0 bg-gradient-to-br ${session?.user?.role === 'partner' ? 'from-blue-500 to-cyan-500' : 'from-[#7e22ce] via-[#3b82f6] to-[#ddbc76]'} opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
+          <div className="bg-[#0A0710] rounded-[15px] p-4 relative z-10 h-full flex flex-col">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-2xl rounded-full" />
+            
+            <div className="flex items-center gap-3 mb-4">
+               {session?.user?.image ? (
+                 <img src={session.user.image} alt="Profile" className="w-10 h-10 rounded-full border border-white/10" />
+               ) : (
+                 <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
+                   <UserCog className="w-5 h-5 text-gray-400" />
+                 </div>
+               )}
+               <div>
+                 <div className="text-sm font-bold text-white truncate w-24">{session?.user?.name || 'User'}</div>
+                 <div className={`text-[9px] font-black tracking-widest uppercase mt-0.5 ${session?.user?.role === 'partner' ? 'text-blue-400' : (session?.user?.role === 'premium' ? 'text-[#ddbc76]' : 'text-gray-400')}`}>
+                   {session?.user?.role === 'partner' ? 'PARTNER' : (session?.user?.role === "premium" ? t("dash.premium") : "MEMBER")}
+                 </div>
+               </div>
             </div>
-          </div>
-        )}
 
-        {/* Navigation */}
+            {usageInfo && usageInfo.role !== 'partner' && (
+              <>
+                <div className="flex justify-between items-end mb-1.5">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Quota Usage</span>
+                  <span className="text-xs font-black text-white">{currentUsage}<span className="text-gray-500">/{currentLimit > 999 ? '∞' : currentLimit}</span></span>
+                </div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-3">
+                  <div 
+                    className="h-full rounded-full transition-all duration-500 relative"
+                    style={{ 
+                      width: `${quotaPercent}%`,
+                      background: quotaPercent >= 100 ? '#ef4444' : (session?.user?.role === 'premium' ? 'linear-gradient(90deg, #7e22ce, #ddbc76)' : '#3b82f6')
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(session?.user?.role === "premium" && premiumExpiry) ? (
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold mt-auto pt-2 border-t border-white/5">
+                <Clock className="w-3 h-3 text-[#ddbc76]" /> {premiumExpiry} left
+              </div>
+            ) : (timeLeft && usageInfo?.role !== 'partner' && (
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold mt-auto pt-2 border-t border-white/5">
+                <Zap className="w-3 h-3 text-blue-400" /> Resets in {timeLeft}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
         <nav className="flex flex-col gap-2 flex-1">
+          <p className="text-[10px] text-gray-600 font-bold tracking-widest uppercase mb-1 px-2">Tools</p>
           <button 
             onClick={() => { setActiveTab('quality'); setFile(null); setErrorMsg(''); setIsComplete(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium ${
+            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium group relative overflow-hidden ${
               activeTab === 'quality' 
-                ? 'glass-gold text-[#ddbc76] shadow-[0_0_15px_rgba(221,188,118,0.1)]' 
-                : 'hover:bg-white/5 text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-white/10 to-transparent border border-white/10 text-white' 
+                : 'hover:bg-white/5 text-gray-400 hover:text-white border border-transparent'
             }`}
           >
-             <Music className="w-4 h-4" /> <span>{t("dash.quality")}</span>
+            <div className="flex items-center gap-3 relative z-10">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'quality' ? 'bg-[#ddbc76]/20 text-[#ddbc76]' : 'bg-white/5 text-gray-400 group-hover:text-white'}`}>
+                <Music className="w-4 h-4" />
+              </div>
+              <span className="font-bold">{t("dash.quality")}</span>
+            </div>
+            {activeTab === 'quality' && <div className="w-1.5 h-1.5 rounded-full bg-[#ddbc76] shadow-[0_0_10px_#ddbc76] animate-pulse relative z-10" />}
+            {activeTab === 'quality' && <div className="absolute inset-0 bg-gradient-to-r from-[#ddbc76]/10 to-transparent pointer-events-none" />}
           </button>
+
           <button 
             onClick={() => { setActiveTab('smooth'); setFile(null); setErrorMsg(''); setIsComplete(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium ${
+            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium group relative overflow-hidden ${
               activeTab === 'smooth' 
-                ? 'glass-gold text-[#ddbc76] shadow-[0_0_15px_rgba(221,188,118,0.1)]' 
-                : 'hover:bg-white/5 text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-white/10 to-transparent border border-white/10 text-white' 
+                : 'hover:bg-white/5 text-gray-400 hover:text-white border border-transparent'
             }`}
           >
-             <Zap className="w-4 h-4" /> <span>{t("dash.smooth")}</span>
+            <div className="flex items-center gap-3 relative z-10">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'smooth' ? 'bg-[#3b82f6]/20 text-[#3b82f6]' : 'bg-white/5 text-gray-400 group-hover:text-white'}`}>
+                <Zap className="w-4 h-4" />
+              </div>
+              <span className="font-bold">{t("dash.smooth")}</span>
+            </div>
+            {activeTab === 'smooth' && <div className="w-1.5 h-1.5 rounded-full bg-[#3b82f6] shadow-[0_0_10px_#3b82f6] animate-pulse relative z-10" />}
+            {activeTab === 'smooth' && <div className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/10 to-transparent pointer-events-none" />}
           </button>
           
           <div className="flex-1" />
           
           {session?.user?.role !== 'partner' && session?.user?.role !== 'premium' && (
-            <Link href="/topup" className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-bold bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-white/20 to-purple-500/0 -translate-x-full group-hover:animate-shimmer" />
-              <Crown className="w-4 h-4 text-purple-400" /> 
-              <span>GET VIP</span>
+            <Link href="/topup" className="flex items-center justify-center gap-2 py-4 mb-2 rounded-xl transition-all duration-300 text-sm font-black bg-gradient-to-r from-[#7e22ce] to-[#3b82f6] text-white hover:shadow-[0_0_30px_rgba(126,34,206,0.4)] group relative overflow-hidden hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
+              <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" /> 
+              <span>UPGRADE TO VIP</span>
             </Link>
           )}
 
-          <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition text-gray-400 hover:text-white text-sm font-medium">
-             <Settings className="w-4 h-4" /> <span>{t("dash.settings")}</span>
+          <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition text-gray-500 hover:text-white text-sm font-medium group">
+             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" /> <span>{t("dash.settings")}</span>
           </button>
         </nav>
         
-        {/* Language + Logout */}
-        <div className="mt-4 space-y-2">
+        {/* Footer Actions */}
+        <div className="mt-2 pt-4 border-t border-white/5 flex gap-2">
           <button 
             onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 btn-glass rounded-xl text-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all"
           >
-            <Globe className="w-4 h-4 text-gray-400" /> {lang === 'th' ? 'EN' : 'TH'}
+            <Globe className="w-3 h-3" /> {lang === 'th' ? 'EN' : 'TH'}
           </button>
-          <button onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-xl transition text-sm font-bold">
-             <LogOut className="w-4 h-4" /> {t("dash.logout")}
+          <button 
+            onClick={() => signOut()} 
+            className="flex items-center justify-center w-10 h-10 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-xl transition-all"
+            title={t("dash.logout")}
+          >
+             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col relative z-10 min-w-0">
+      {/* ====== MAIN CONTENT AREA ====== */}
+      <div className="flex-1 flex flex-col relative z-10 min-w-0 bg-[#0A0710]/40 backdrop-blur-xl border border-white/5 rounded-[32px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]">
         {/* Video Background Blur */}
         {videoUrl && (
           <>
             <video 
               src={videoUrl} 
-              className="absolute inset-0 w-full h-full object-cover opacity-40 blur-lg z-0 mix-blend-screen"
+              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[60px] z-0 mix-blend-screen transition-opacity duration-1000"
               autoPlay loop muted playsInline
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#06040A] via-[#06040A]/60 to-transparent z-0" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#06040A]/50 to-[#06040A] z-0" />
           </>
         )}
         
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 relative z-10">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12 relative z-10">
+          <div className="max-w-3xl mx-auto">
             {/* Header */}
-            <header className="animate-fade-in">
-              <h2 className="text-3xl md:text-4xl font-black tracking-tighter mb-1">
-                AURA <span className="text-gradient-gold">WORKSPACE</span>
+            <header className="mb-10 animate-fade-in-up">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">
+                {activeTab === 'quality' ? (
+                  <>AURA <span className="text-gradient-gold">QUALITY</span></>
+                ) : (
+                  <>AURA <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]">SMOOTH FPS</span></>
+                )}
               </h2>
-              <p className="text-gray-400 text-sm font-medium">
+              <p className="text-gray-400 text-base font-medium max-w-xl leading-relaxed">
                 {activeTab === 'quality' 
-                  ? (lang === 'th' ? 'ปรับแต่งและบีบอัดไฟล์วิดีโอของคุณ' : 'Optimize and compress your video files.')
-                  : (lang === 'th' ? 'แปลงวิดีโอของคุณเป็น 60FPS สุดลื่นไหล' : 'Convert your videos to ultra smooth 60FPS')
+                  ? (lang === 'th' ? 'ระบบแพตช์ไฟล์ MP4 ระดับ Binary เพื่อปลดล็อกข้อจำกัดการบีบอัดวิดีโอ ให้ได้คุณภาพสูงสุดบนโซเชียลมีเดีย' : 'Binary-level MP4 patcher to unlock video compression limits for maximum quality on social media.')
+                  : (lang === 'th' ? 'ระบบแทรกเฟรมเรตอัจฉริยะ แปลงวิดีโอของคุณให้ลื่นไหลระดับ 60FPS แบบไม่มีสะดุด' : 'Intelligent frame interpolation to convert your videos to ultra-smooth 60FPS.')
                 }
               </p>
             </header>
 
-            {/* Main Card */}
-            <div className="glass-card rounded-[28px] p-6 md:p-8 animate-scale-in">
-              {/* Tab Title */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ddbc76]/20 to-[#aa8323]/10 flex items-center justify-center border border-[#ddbc76]/20">
-                  {activeTab === 'quality' ? <Music className="w-5 h-5 text-[#ddbc76]" /> : <Zap className="w-5 h-5 text-[#ddbc76]" />}
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-white">
-                    {activeTab === 'quality' ? 'AURA QUALITY' : 'AURA SMOOTH FPS'}
-                  </h3>
-                  <p className="text-xs text-gray-500">{activeTab === 'quality' ? 'Binary-Level MP4 Patcher' : '60FPS Conversion'}</p>
-                </div>
-              </div>
+            {/* Drag & Drop Zone */}
+            <div 
+              ref={dropRef}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative rounded-[32px] p-1 overflow-hidden transition-all duration-500 animate-scale-in mb-8 ${isDragOver ? 'scale-[1.02]' : ''}`}
+            >
+               {/* Animated Border */}
+               <div className={`absolute inset-0 border-2 border-dashed rounded-[32px] transition-colors duration-500 z-10 pointer-events-none ${isDragOver ? (activeTab === 'quality' ? 'border-[#ddbc76]' : 'border-[#3b82f6]') : 'border-white/10'}`} />
+               
+               {isDragOver && (
+                 <div className={`absolute inset-0 opacity-20 blur-2xl z-0 ${activeTab === 'quality' ? 'bg-[#ddbc76]' : 'bg-[#3b82f6]'}`} />
+               )}
 
-              {/* Drag & Drop Zone */}
-              <div 
-                ref={dropRef}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`dropzone rounded-2xl p-8 md:p-12 flex flex-col items-center justify-center text-center transition-all duration-300 ${
-                  isDragOver ? 'drag-over' : ''
-                } ${file ? 'border-[#ddbc76]/30 bg-[#ddbc76]/5' : ''}`}
-              >
-                {!file ? (
-                  <>
-                    <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center mb-4">
-                      <Upload className="w-7 h-7 text-gray-400" />
-                    </div>
-                    <p className="text-lg font-bold text-white mb-1">
-                      {lang === 'th' ? 'ลากไฟล์มาวางตรงนี้' : 'Drag & Drop your video here'}
-                    </p>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {lang === 'th' ? 'หรือกดปุ่มด้านล่างเพื่อเลือกไฟล์' : 'or click the button below to browse'}
-                    </p>
-                    <label className="cursor-pointer">
-                      <div className="px-6 py-3 btn-glass rounded-xl text-sm flex items-center gap-2 hover:border-[#ddbc76]/30 hover:text-[#ddbc76] transition-all">
-                        <FileVideo className="w-4 h-4" /> {t("dash.browse")}
+               <div className="bg-[#0A0710]/90 backdrop-blur-md rounded-[30px] p-8 md:p-16 flex flex-col items-center justify-center text-center relative z-20 min-h-[300px]">
+                  {!file ? (
+                    <>
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-2xl transition-transform duration-500 ${isDragOver ? 'scale-110' : ''} ${activeTab === 'quality' ? 'bg-[#ddbc76]/10 text-[#ddbc76] shadow-[#ddbc76]/20' : 'bg-[#3b82f6]/10 text-[#3b82f6] shadow-[#3b82f6]/20'}`}>
+                        <Upload className="w-10 h-10" />
                       </div>
-                      <input type="file" accept="video/mp4" className="hidden" onChange={handleFileChange} />
-                    </label>
-                    <p className="text-[10px] text-gray-600 mt-3">
-                      {lang === 'th' 
-                        ? `รองรับ MP4 • สูงสุด ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB (${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'})` 
-                        : `MP4 supported • Max ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB (${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'})`
-                      }
-                    </p>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-4 w-full">
-                    <div className="w-14 h-14 rounded-xl glass-card flex items-center justify-center shrink-0">
-                      {isComplete ? (
-                        <CheckCircle className="w-6 h-6 text-green-400" />
-                      ) : (
-                        <FileVideo className="w-6 h-6 text-[#ddbc76]" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{file.name}</p>
-                      <p className="text-xs text-gray-400">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                      {isComplete && (
-                        <p className="text-xs text-green-400 font-bold mt-1 flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" /> {lang === 'th' ? 'สำเร็จ! ไฟล์ถูกดาวน์โหลดแล้ว' : 'Done! File downloaded'}
-                        </p>
-                      )}
-                    </div>
-                    <label className="cursor-pointer shrink-0">
-                      <div className="px-4 py-2 btn-glass rounded-lg text-xs">
-                        {lang === 'th' ? 'เปลี่ยนไฟล์' : 'Change'}
-                      </div>
-                      <input type="file" accept="video/mp4" className="hidden" onChange={handleFileChange} />
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              {/* Mode Selector (for Smooth tab) */}
-              {activeTab === 'smooth' && (
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="glass-gold rounded-xl p-5 flex flex-col items-center cursor-pointer relative overflow-hidden">
-                    <Zap className="w-5 h-5 text-[#ddbc76] mb-2" />
-                    <h3 className="text-lg font-black text-white">60 FPS</h3>
-                    <p className="text-xs font-bold text-gray-300">Smooth Balanced</p>
-                  </div>
-                  <div className="glass-card rounded-xl p-5 flex flex-col items-center opacity-40 cursor-not-allowed">
-                    <Music className="w-5 h-5 text-gray-400 mb-2" />
-                    <h3 className="text-lg font-black text-gray-400">120 FPS</h3>
-                    <p className="text-xs font-bold text-gray-500">Not available on web</p>
-                  </div>
-                </div>
-              )}
-
-              {/* File Info (for Quality tab) */}
-              {activeTab === 'quality' && file && (
-                <div className="mt-6 space-y-6">
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { label: t("dash.size"), value: `${(file.size / (1024 * 1024)).toFixed(2)} MB` },
-                      { label: t("dash.format"), value: file.type || 'video/mp4' },
-                      { label: t("compare.quality"), value: t("dash.max") },
-                    ].map((item, i) => (
-                      <div key={i} className="glass-card rounded-xl p-4 text-center">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">{item.label}</p>
-                        <p className="text-sm font-bold text-white">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Partner Compression Slider */}
-                  <div className={`glass-card rounded-[24px] p-6 relative overflow-hidden ${usageInfo?.role !== 'partner' ? 'opacity-50 pointer-events-none' : 'border-blue-500/30'}`}>
-                     {usageInfo?.role !== 'partner' && (
-                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[2px]">
-                          <Shield className="w-8 h-8 text-blue-400 mb-2" />
-                          <p className="text-sm font-bold text-white">Partner Only Feature</p>
-                       </div>
-                     )}
-                     <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h4 className="text-white font-bold flex items-center gap-2">
-                             <Settings className="w-4 h-4 text-blue-400" />
-                             {lang === 'th' ? 'บีบอัดขนาดไฟล์' : 'Compress File Size'}
-                          </h4>
-                          <p className="text-[10px] text-gray-400 mt-1">
-                             {lang === 'th' ? 'เลื่อนเพื่อกำหนดขนาดไฟล์ MB ที่ต้องการ' : 'Adjust slider to set target MB'}
-                          </p>
+                      <h3 className="text-2xl font-black text-white mb-2">
+                        {lang === 'th' ? 'ลากไฟล์มาวางตรงนี้' : 'Drag & Drop your video'}
+                      </h3>
+                      <p className="text-gray-400 mb-8 max-w-sm">
+                        {lang === 'th' ? 'หรือกดปุ่มด้านล่างเพื่อเลือกไฟล์จากคอมพิวเตอร์ของคุณ' : 'or click the button below to browse files from your computer'}
+                      </p>
+                      <label className="cursor-pointer group relative">
+                        <div className={`absolute inset-0 blur-xl opacity-50 group-hover:opacity-100 transition-opacity ${activeTab === 'quality' ? 'bg-[#ddbc76]' : 'bg-[#3b82f6]'}`} />
+                        <div className="relative px-8 py-4 bg-white text-black font-black rounded-xl text-sm flex items-center gap-3 hover:scale-105 transition-transform">
+                          <FileVideo className="w-5 h-5" /> {t("dash.browse")}
                         </div>
-                        <div className="text-xl font-black text-blue-400">
-                           {targetSizeMB} <span className="text-sm text-gray-400">MB</span>
+                        <input type="file" accept="video/mp4" className="hidden" onChange={handleFileChange} />
+                      </label>
+                      <div className="mt-8 px-4 py-2 rounded-lg bg-white/5 border border-white/5 inline-flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-xs text-gray-400 font-bold tracking-widest uppercase">
+                          {lang === 'th' 
+                            ? `MP4 • MAX ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB • ${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'}` 
+                            : `MP4 • MAX ${usageInfo?.role === 'partner' ? 500 : (usageInfo?.role === 'premium' ? 100 : 30)}MB • ${(!usageInfo || usageInfo.role === 'free') ? '1080p' : '4K'}`
+                          }
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full">
+                      <div className="flex flex-col md:flex-row items-center gap-6 text-left">
+                        <div className="relative">
+                           <div className={`w-24 h-24 rounded-2xl flex items-center justify-center shadow-2xl z-10 relative ${isComplete ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-white/5 text-white border border-white/10'}`}>
+                             {isComplete ? <CheckCircle className="w-10 h-10" /> : <FileVideo className="w-10 h-10" />}
+                           </div>
+                           {isComplete && <div className="absolute inset-0 bg-green-500 blur-2xl opacity-20 z-0" />}
                         </div>
-                     </div>
-                     <input 
-                       type="range" 
-                       min="1" 
-                       max={Math.ceil(file.size / (1024 * 1024))} 
-                       step="0.1"
-                       value={targetSizeMB}
-                       onChange={(e) => setTargetSizeMB(parseFloat(e.target.value))}
-                       className="w-full accent-blue-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                     />
-                  </div>
-                </div>
-              )}
+                        
+                        <div className="flex-1 text-center md:text-left min-w-0">
+                          <h4 className="text-xl font-bold text-white truncate mb-2">{file.name}</h4>
+                          
+                          {/* File Metrics Grid */}
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4">
+                            <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs font-bold text-gray-300">
+                              <span className="text-gray-500 mr-2 uppercase tracking-widest text-[10px]">Size</span> 
+                              {(file.size / (1024 * 1024)).toFixed(2)} MB
+                            </div>
+                            <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs font-bold text-gray-300">
+                              <span className="text-gray-500 mr-2 uppercase tracking-widest text-[10px]">Type</span> 
+                              MP4
+                            </div>
+                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${activeTab === 'quality' ? 'bg-[#ddbc76]/10 border-[#ddbc76]/30 text-[#ddbc76]' : 'bg-[#3b82f6]/10 border-[#3b82f6]/30 text-[#3b82f6]'}`}>
+                              <span className="mr-2 uppercase tracking-widest text-[10px] opacity-70">Target</span> 
+                              {activeTab === 'quality' ? 'AURA MAX' : '60 FPS'}
+                            </div>
+                          </div>
 
-              {/* Error */}
-              {errorMsg && (
-                <p className="mt-4 text-red-400 text-sm font-bold bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20">
-                  {errorMsg}
-                </p>
-              )}
+                          {isComplete && (
+                            <p className="text-sm text-green-400 font-bold mt-4 flex items-center justify-center md:justify-start gap-2">
+                              <CheckCircle className="w-4 h-4" /> {lang === 'th' ? 'ดำเนินการสำเร็จ ไฟล์ถูกดาวน์โหลดแล้ว' : 'Success! File has been downloaded'}
+                            </p>
+                          )}
+                        </div>
 
-              {/* Progress Bar */}
-              {isProcessing && (
-                <div className="mt-6">
-                  <div className="flex justify-between text-xs mb-2">
-                    <span className="text-gray-400 font-bold">{t("dash.patching")}</span>
-                    <span className="text-[#ddbc76] font-black">{progress}%</span>
-                  </div>
-                  <div className="w-full h-2 glass-card rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full bg-gradient-to-r from-[#7e22ce] via-[#6366f1] to-[#ddbc76] transition-all duration-300 relative"
-                      style={{ width: `${progress}%` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                        <label className="cursor-pointer shrink-0 mt-6 md:mt-0">
+                          <div className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-colors">
+                            {lang === 'th' ? 'เปลี่ยนไฟล์' : 'Change File'}
+                          </div>
+                          <input type="file" accept="video/mp4" className="hidden" onChange={handleFileChange} />
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Button */}
-              <button 
-                onClick={processVideo}
-                disabled={isProcessing || !file || (activeTab !== 'smooth' && !isReady)}
-                className="mt-6 w-full py-5 rounded-2xl font-black text-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed relative overflow-hidden group
-                  bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black hover:shadow-[0_0_40px_rgba(221,188,118,0.4)] hover:-translate-y-0.5"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                {isProcessing ? (
-                  <span className="flex items-center justify-center gap-2 relative z-10">
-                    <Loader2 className="animate-spin w-5 h-5"/> {t("dash.patching")} {progress}%
-                  </span>
-                ) : (!isReady && activeTab !== 'smooth') ? (
-                  <span className="relative z-10">{t("dash.loading")}</span>
-                ) : (
-                  <span className="relative z-10">{activeTab === 'quality' ? t("dash.init") : "START CONVERSION"}</span>
-                )}
-              </button>
+                  )}
+               </div>
             </div>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 animate-fade-in">
+                <Shield className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-red-400 text-sm font-bold">{errorMsg}</p>
+              </div>
+            )}
+
+            {/* File Selected Controls */}
+            {file && !errorMsg && (
+              <div className="animate-fade-in-up stagger-1">
+                
+                {/* Partner Compression Slider */}
+                {activeTab === 'quality' && (
+                  <div className={`mb-8 p-6 rounded-[24px] bg-white/[0.02] border border-white/5 relative overflow-hidden transition-opacity ${usageInfo?.role !== 'partner' ? 'opacity-50' : 'hover:bg-white/[0.04]'}`}>
+                    {usageInfo?.role !== 'partner' && (
+                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0A0710]/80 backdrop-blur-sm rounded-[24px]">
+                          <Shield className="w-8 h-8 text-blue-400 mb-2" />
+                          <p className="text-sm font-bold text-white uppercase tracking-widest">Partner Only Feature</p>
+                       </div>
+                    )}
+                    <div className="flex items-center justify-between mb-6 relative z-10">
+                      <div>
+                        <h4 className="text-white font-bold text-lg flex items-center gap-2">
+                           <Settings className="w-5 h-5 text-blue-400" />
+                           {lang === 'th' ? 'บีบอัดขนาดไฟล์' : 'Compress File Size'}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                           {lang === 'th' ? 'ปรับสไลเดอร์เพื่อกำหนดขนาดไฟล์ที่ต้องการ' : 'Adjust slider to set target MB'}
+                        </p>
+                      </div>
+                      <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                         {targetSizeMB} <span className="text-sm text-gray-500 font-bold">MB</span>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max={Math.ceil(file.size / (1024 * 1024))} 
+                      step="0.1"
+                      value={targetSizeMB}
+                      onChange={(e) => setTargetSizeMB(parseFloat(e.target.value))}
+                      className="w-full accent-blue-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer relative z-10"
+                    />
+                  </div>
+                )}
+
+                {/* Progress Bar UI */}
+                {isProcessing && (
+                  <div className="mb-8 p-6 rounded-[24px] bg-[#0A0710]/50 border border-white/5 shadow-inner">
+                    <div className="flex justify-between items-end mb-3">
+                      <div className="flex items-center gap-3">
+                        <Loader2 className={`w-5 h-5 animate-spin ${activeTab === 'quality' ? 'text-[#ddbc76]' : 'text-[#3b82f6]'}`}/> 
+                        <span className="text-white font-bold">{t("dash.patching")}</span>
+                      </div>
+                      <span className={`text-2xl font-black ${activeTab === 'quality' ? 'text-gradient-gold' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400'}`}>{progress}%</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden relative border border-white/10">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-300 relative overflow-hidden ${activeTab === 'quality' ? 'bg-gradient-to-r from-[#7e22ce] via-[#aa8323] to-[#ddbc76]' : 'bg-gradient-to-r from-[#3b82f6] via-[#6366f1] to-[#8b5cf6]'}`}
+                        style={{ width: `${progress}%` }}
+                      >
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PC9yZWN0Pgo8cGF0aCBkPSJNMCA4TDggMCBaIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPjwvc3ZnPg==')] opacity-50 animate-slide" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Execute Button */}
+                <button 
+                  onClick={processVideo}
+                  disabled={isProcessing || (!isReady && activeTab !== 'smooth')}
+                  className={`w-full py-6 rounded-[24px] font-black text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group shadow-2xl hover:-translate-y-1 ${
+                    activeTab === 'quality' 
+                      ? 'bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black hover:shadow-[0_0_50px_rgba(221,188,118,0.5)]' 
+                      : 'bg-gradient-to-r from-[#3b82f6] to-[#7e22ce] text-white hover:shadow-[0_0_50px_rgba(59,130,246,0.5)]'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    {isProcessing ? (
+                      <>Processing File...</>
+                    ) : (!isReady && activeTab !== 'smooth') ? (
+                      <>{t("dash.loading")}</>
+                    ) : (
+                      <>
+                        {activeTab === 'quality' ? <Zap className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+                        {activeTab === 'quality' ? 'INITIALIZE PATCH' : 'INITIALIZE SMOOTH 60FPS'}
+                      </>
+                    )}
+                  </div>
+                </button>
+
+              </div>
+            )}
           </div>
         </div>
       </div>
