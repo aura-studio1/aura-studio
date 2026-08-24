@@ -137,20 +137,20 @@ export default function CreatorsPage() {
                 />
                 
                 {/* Image Container */}
-                <div className="w-full relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition-all duration-500 bg-[#0A0710] shadow-2xl">
+                <div className="w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[5/3] relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition-all duration-500 bg-black shadow-2xl flex items-center justify-center">
                    
                    {/* Gradient overlay at bottom to blend image into card */}
-                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0A0710] to-transparent z-10 pointer-events-none opacity-80 group-hover:opacity-30 transition-opacity duration-700" />
+                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none opacity-80 group-hover:opacity-30 transition-opacity duration-700" />
 
                    <img 
                       src={creator.image_url} 
                       alt="TikTok Profile" 
-                      className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out brightness-90 group-hover:brightness-110"
+                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-[1.5s] ease-out brightness-90 group-hover:brightness-110"
                    />
                    
                    {/* Floating Button on hover */}
                    <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
-                      <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.2)] text-white scale-75 group-hover:scale-100 transition-transform duration-500 ease-out delay-75">
+                      <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.2)] text-white scale-75 group-hover:scale-100 transition-transform duration-500 ease-out delay-75">
                          <span className="font-bold tracking-widest text-sm uppercase text-shadow">Visit Channel</span>
                          <ExternalLink className="w-4 h-4" />
                       </div>
