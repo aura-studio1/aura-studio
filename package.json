@@ -10,6 +10,7 @@
     "obfuscate": "node scripts/obfuscate.js"
   },
   "dependencies": {
+    "@auth/supabase-adapter": "^1.11.3",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@supabase/supabase-js": "^2.112.3",
