@@ -30,6 +30,12 @@ export default function Dashboard({ session }: { session: any }) {
   const ffmpegRef = useRef(new FFmpeg());
   const [isReady, setIsReady] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
+  
+  // Status check state
+  const [serverStatus, setServerStatus] = useState<any[]>([]);
+  const currentToolStatus = activeTab === 'quality' 
+     ? serverStatus.find(s => s.id === 'quality_patcher')?.status || 'online'
+     : serverStatus.find(s => s.id === 'smooth_fps')?.status || 'online';
 
   const loadFFmpeg = async () => {
     const ffmpeg = ffmpegRef.current;
@@ -62,6 +68,14 @@ export default function Dashboard({ session }: { session: any }) {
   useEffect(() => {
     loadFFmpeg();
     fetchUsageInfo();
+    
+    // Fetch Server Status
+    fetch('/api/status')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setServerStatus(data);
+      })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -201,6 +215,10 @@ export default function Dashboard({ session }: { session: any }) {
   }, [activeTab]);
 
   const processVideo = async () => {
+    if (currentToolStatus !== 'online') {
+       setErrorMsg(lang === 'th' ? 'ระบบนี้กำลังปิดปรับปรุง ไม่สามารถใช้งานได้ชั่วคราว' : 'This service is currently under maintenance.');
+       return;
+    }
     if (!file || (activeTab === 'quality' && !isReady)) return;
     
     let maxMB = 30; // Free
@@ -587,6 +605,23 @@ export default function Dashboard({ session }: { session: any }) {
                 <p className="text-red-400 text-sm font-bold">{errorMsg}</p>
               </div>
             )}
+            
+            {/* Maintenance Banner */}
+            {currentToolStatus !== 'online' && !errorMsg && (
+              <div className="mb-8 p-6 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-start gap-4 animate-fade-in">
+                <AlertTriangle className="w-6 h-6 text-yellow-400 shrink-0 mt-0.5" />
+                <div>
+                   <h3 className="text-yellow-400 text-lg font-bold mb-1">
+                      {lang === 'th' ? 'ระบบกำลังปิดปรับปรุง (Maintenance)' : 'System Under Maintenance'}
+                   </h3>
+                   <p className="text-yellow-400/80 text-sm font-medium">
+                      {lang === 'th' 
+                         ? 'ขออภัยครับ ฟีเจอร์นี้กำลังอยู่ระหว่างการปรับปรุงอัลกอริทึมชั่วคราว กรุณารอประกาศเปิดใช้งานอีกครั้งใน Discord' 
+                         : 'Sorry, this feature is currently undergoing maintenance. Please wait for an announcement in our Discord server.'}
+                   </p>
+                </div>
+              </div>
+            )}
 
             {/* File Selected Controls */}
             {file && !errorMsg && (
@@ -652,12 +687,12 @@ export default function Dashboard({ session }: { session: any }) {
                 {/* Execute Button */}
                 <button 
                   onClick={processVideo}
-                  disabled={isProcessing || (!isReady && activeTab !== 'smooth')}
+                  disabled={isProcessing || (!isReady && activeTab !== 'smooth') || currentToolStatus !== 'online'}
                   className={`w-full py-6 rounded-[24px] font-black text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group shadow-2xl hover:-translate-y-1 ${
                     activeTab === 'quality' 
                       ? 'bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black hover:shadow-[0_0_50px_rgba(221,188,118,0.5)]' 
                       : 'bg-gradient-to-r from-[#3b82f6] to-[#7e22ce] text-white hover:shadow-[0_0_50px_rgba(59,130,246,0.5)]'
-                  }`}
+                  } ${currentToolStatus !== 'online' ? 'grayscale opacity-50' : ''}`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
                   <div className="relative z-10 flex items-center justify-center gap-3">
