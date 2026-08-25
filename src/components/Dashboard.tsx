@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import Link from "next/link";
-import { Loader2, Zap, Settings, Shield, Music, LogOut, Globe, UserCog, Upload, FileVideo, CheckCircle, Clock, ChevronDown, Crown } from "lucide-react";
+import { Loader2, Zap, Settings, Shield, Music, LogOut, Globe, UserCog, Upload, FileVideo, CheckCircle, Clock, ChevronDown, Crown, AlertTriangle } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { applyBinaryPatch, applySmoothFpsPatch } from "@/lib/patcher.obfuscated";
 
