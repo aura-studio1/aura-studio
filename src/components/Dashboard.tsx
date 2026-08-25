@@ -215,7 +215,8 @@ export default function Dashboard({ session }: { session: any }) {
   }, [activeTab]);
 
   const processVideo = async () => {
-    if (currentToolStatus !== 'online') {
+    const isMaintenanceForUser = currentToolStatus !== 'online' && session?.user?.role !== 'partner';
+    if (isMaintenanceForUser) {
        setErrorMsg(lang === 'th' ? 'ระบบนี้กำลังปิดปรับปรุง ไม่สามารถใช้งานได้ชั่วคราว' : 'This service is currently under maintenance.');
        return;
     }
@@ -619,6 +620,11 @@ export default function Dashboard({ session }: { session: any }) {
                          ? 'ขออภัยครับ ฟีเจอร์นี้กำลังอยู่ระหว่างการปรับปรุงอัลกอริทึมชั่วคราว กรุณารอประกาศเปิดใช้งานอีกครั้งใน Discord' 
                          : 'Sorry, this feature is currently undergoing maintenance. Please wait for an announcement in our Discord server.'}
                    </p>
+                   {session?.user?.role === 'partner' && (
+                      <p className="text-white text-xs font-bold mt-3 bg-black/50 px-3 py-1.5 rounded-lg inline-block border border-white/10">
+                         👑 Partner Bypass Active: คุณสามารถทดสอบระบบได้ตามปกติ
+                      </p>
+                   )}
                 </div>
               </div>
             )}
@@ -687,12 +693,12 @@ export default function Dashboard({ session }: { session: any }) {
                 {/* Execute Button */}
                 <button 
                   onClick={processVideo}
-                  disabled={isProcessing || (!isReady && activeTab !== 'smooth') || currentToolStatus !== 'online'}
+                  disabled={isProcessing || (!isReady && activeTab !== 'smooth') || (currentToolStatus !== 'online' && session?.user?.role !== 'partner')}
                   className={`w-full py-6 rounded-[24px] font-black text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group shadow-2xl hover:-translate-y-1 ${
                     activeTab === 'quality' 
                       ? 'bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black hover:shadow-[0_0_50px_rgba(221,188,118,0.5)]' 
                       : 'bg-gradient-to-r from-[#3b82f6] to-[#7e22ce] text-white hover:shadow-[0_0_50px_rgba(59,130,246,0.5)]'
-                  } ${currentToolStatus !== 'online' ? 'grayscale opacity-50' : ''}`}
+                  } ${(currentToolStatus !== 'online' && session?.user?.role !== 'partner') ? 'grayscale opacity-50' : ''}`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
                   <div className="relative z-10 flex items-center justify-center gap-3">
