@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [editRole, setEditRole] = useState("");
   const [editUsage, setEditUsage] = useState(0);
   const [editPremiumSince, setEditPremiumSince] = useState("");
+  const [editBonusDays, setEditBonusDays] = useState(0);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +95,7 @@ export default function AdminDashboard() {
     if (!editingUserId) return;
     await apiAction("update_role", editingUserId, { role: editRole });
     await apiAction("update_usage", editingUserId, { usage_count: editUsage });
+    await apiAction("update_bonus", editingUserId, { bonus_days: editBonusDays });
     if (editRole === 'premium' && editPremiumSince) {
       await apiAction("update_premium_since", editingUserId, { premium_since: editPremiumSince });
     }
@@ -221,7 +223,10 @@ export default function AdminDashboard() {
                           <option value="partner">PARTNER</option>
                         </select>
                         {editRole === 'premium' && (
-                          <span className="text-[10px] text-gray-500">* วันหมดอายุจะเริ่มนับ 30 วันนับจากวันนี้อัตโนมัติ</span>
+                          <div className="mt-1 flex flex-col gap-1">
+                            <span className="text-xs text-gray-400 font-bold">เลือกวันเริ่มนับ 30 วัน:</span>
+                            <input type="datetime-local" value={editPremiumSince ? new Date(editPremiumSince).toISOString().slice(0, 16) : ''} onChange={(e) => setEditPremiumSince(new Date(e.target.value).toISOString())} className="bg-black border border-[#ddbc76] rounded-lg px-2 py-1.5 text-white w-max text-xs"/>
+                          </div>
                         )}
                       </div>
                     ) : (
@@ -264,10 +269,18 @@ export default function AdminDashboard() {
                   {/* Bonus Days Column */}
                   <td className="p-5">
                     <div className="flex items-center gap-3">
-                      <span className={`font-mono text-lg font-black ${u.bonus_days > 0 ? 'text-green-400' : u.bonus_days < 0 ? 'text-red-400' : 'text-gray-500'}`}>
-                        {u.bonus_days > 0 ? '+' : ''}{u.bonus_days}
-                      </span>
-                      {u.role === 'premium' && (
+                      {editingUserId === u.discord_id ? (
+                        <div className="flex items-center gap-2">
+                          <input type="number" value={editBonusDays} onChange={(e) => setEditBonusDays(parseInt(e.target.value))} className="w-16 bg-black border border-[#ddbc76] rounded-lg px-2 py-1 text-center font-bold text-white"/>
+                          <span className="text-xs text-gray-500">วันแถม</span>
+                        </div>
+                      ) : (
+                        <span className={`font-mono text-lg font-black ${u.bonus_days > 0 ? 'text-green-400' : u.bonus_days < 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                          {u.bonus_days > 0 ? '+' : ''}{u.bonus_days}
+                        </span>
+                      )}
+                      
+                      {u.role === 'premium' && !editingUserId && (
                         <div className="flex flex-wrap gap-1.5 max-w-[120px]">
                           <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, -1)} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white text-[10px] font-bold border border-red-500/20">-1 วัน</button>
                           <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 1)} className="px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white text-[10px] font-bold border border-green-500/20">+1 วัน</button>
@@ -286,7 +299,7 @@ export default function AdminDashboard() {
                           <Save className="w-4 h-4"/> Save
                         </button>
                       ) : (
-                        <button onClick={() => { setEditingUserId(u.discord_id); setEditRole(u.role); setEditUsage(u.usage_count); setEditPremiumSince(u.premium_since || ''); }} className="p-2 bg-white/5 text-gray-400 border border-white/10 rounded-lg hover:bg-white/20 hover:text-white transition">
+                        <button onClick={() => { setEditingUserId(u.discord_id); setEditRole(u.role); setEditUsage(u.usage_count); setEditPremiumSince(u.premium_since || ''); setEditBonusDays(u.bonus_days || 0); }} className="p-2 bg-white/5 text-gray-400 border border-white/10 rounded-lg hover:bg-white/20 hover:text-white transition">
                           <Edit2 className="w-4 h-4"/>
                         </button>
                       )}
