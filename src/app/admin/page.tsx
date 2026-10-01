@@ -210,15 +210,20 @@ export default function AdminDashboard() {
                   {/* Role Column */}
                   <td className="p-5">
                     {editingUserId === u.discord_id ? (
-                      <select 
-                        value={editRole} 
-                        onChange={(e) => setEditRole(e.target.value)}
-                        className="bg-black border border-[#ddbc76] text-[#ddbc76] font-bold px-3 py-1.5 rounded-lg focus:outline-none"
-                      >
-                        <option value="free">FREE</option>
-                        <option value="premium">PREMIUM</option>
-                        <option value="partner">PARTNER</option>
-                      </select>
+                      <div className="flex flex-col gap-2">
+                        <select 
+                          value={editRole} 
+                          onChange={(e) => setEditRole(e.target.value)}
+                          className="bg-black border border-[#ddbc76] text-[#ddbc76] font-bold px-3 py-1.5 rounded-lg focus:outline-none w-max"
+                        >
+                          <option value="free">FREE</option>
+                          <option value="premium">PREMIUM</option>
+                          <option value="partner">PARTNER</option>
+                        </select>
+                        {editRole === 'premium' && (
+                          <span className="text-[10px] text-gray-500">* วันหมดอายุจะเริ่มนับ 30 วันนับจากวันนี้อัตโนมัติ</span>
+                        )}
+                      </div>
                     ) : (
                       <span className={`px-3 py-1.5 text-[10px] font-black rounded-full tracking-wider uppercase inline-flex items-center gap-1.5 ${
                         u.role === 'premium' ? 'glass-gold text-[#ddbc76]' : u.role === 'partner' ? 'glass-blue text-blue-400' : 'glass text-gray-400'
@@ -227,14 +232,10 @@ export default function AdminDashboard() {
                         {u.role}
                       </span>
                     )}
-                    {u.role === 'premium' && (
+                    {u.role === 'premium' && !editingUserId && (
                       <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" /> 
-                        {editingUserId === u.discord_id ? (
-                          <input type="datetime-local" value={editPremiumSince ? new Date(editPremiumSince).toISOString().slice(0, 16) : ''} onChange={(e) => setEditPremiumSince(new Date(e.target.value).toISOString())} className="bg-black border border-white/20 rounded px-2 py-1 text-white"/>
-                        ) : (
-                           u.premium_since ? new Date(u.premium_since).toLocaleDateString() : 'N/A'
-                        )}
+                        หมดอายุ: {u.premium_since ? new Date(new Date(u.premium_since).getTime() + (30 + u.bonus_days) * 24 * 60 * 60 * 1000).toLocaleDateString('th-TH') : 'N/A'}
                       </div>
                     )}
                   </td>
@@ -267,9 +268,11 @@ export default function AdminDashboard() {
                         {u.bonus_days > 0 ? '+' : ''}{u.bonus_days}
                       </span>
                       {u.role === 'premium' && (
-                        <div className="flex gap-1.5">
-                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, -1)} className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition border border-red-500/20"><Minus className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 1)} className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white flex items-center justify-center transition border border-green-500/20"><Plus className="w-3.5 h-3.5" /></button>
+                        <div className="flex flex-wrap gap-1.5 max-w-[120px]">
+                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, -1)} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white text-[10px] font-bold border border-red-500/20">-1 วัน</button>
+                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 1)} className="px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white text-[10px] font-bold border border-green-500/20">+1 วัน</button>
+                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 7)} className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white text-[10px] font-bold border border-blue-500/20">+7 วัน</button>
+                          <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 30)} className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white text-[10px] font-bold border border-purple-500/20">+30 วัน</button>
                         </div>
                       )}
                     </div>
