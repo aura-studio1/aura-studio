@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { ArrowRight, Sparkles, Zap, ShieldCheck, Globe, ChevronDown, Star, Users, Timer } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import Link from "next/link";
@@ -131,9 +131,14 @@ export default function LandingPage() {
             </div>
 
             {session ? (
-              <Link href="/workspace" className="flex items-center gap-2 px-6 py-2.5 rounded-full btn-gold text-black text-sm font-bold group">
-                เข้าสู่ระบบบีบอัด <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <div className="flex items-center gap-3">
+                <button onClick={() => signOut()} className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full btn-glass text-sm text-gray-400 hover:text-white transition">
+                  {lang === 'th' ? 'ออกจากระบบ' : 'Log Out'}
+                </button>
+                <Link href="/workspace" className="flex items-center gap-2 px-6 py-2.5 rounded-full btn-gold text-black text-sm font-bold group">
+                  เข้าสู่ระบบบีบอัด <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
             ) : (
               <button onClick={() => signIn("discord")}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-full btn-glass text-sm group"
@@ -221,12 +226,19 @@ export default function LandingPage() {
           {/* CTA Buttons */}
           <div className="mt-12 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up stagger-3" style={{ opacity: 0 }}>
             {session ? (
-              <Link href="/workspace"
-                className="px-12 py-5 rounded-full bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black font-black text-lg shadow-[0_0_60px_rgba(221,188,118,0.4)] hover:shadow-[0_0_80px_rgba(221,188,118,0.6)] flex items-center gap-3 group relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                <span className="relative z-10 flex items-center gap-2">เข้าสู่พื้นที่ทำงาน AURA <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
-              </Link>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <button onClick={() => signOut()}
+                  className="px-8 py-5 rounded-full btn-glass text-lg flex items-center gap-3 text-gray-400 hover:text-white transition"
+                >
+                  {lang === 'th' ? 'ออกจากระบบ' : 'Log Out'}
+                </button>
+                <Link href="/workspace"
+                  className="px-12 py-5 rounded-full bg-gradient-to-r from-[#ddbc76] to-[#aa8323] text-black font-black text-lg shadow-[0_0_60px_rgba(221,188,118,0.4)] hover:shadow-[0_0_80px_rgba(221,188,118,0.6)] flex items-center gap-3 group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                  <span className="relative z-10 flex items-center gap-2">เข้าสู่พื้นที่ทำงาน AURA <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
+                </Link>
+              </div>
             ) : (
               <button onClick={() => signIn("discord")}
                 className="px-12 py-5 rounded-full btn-primary text-lg shadow-[0_0_60px_rgba(99,102,241,0.4)] hover:shadow-[0_0_80px_rgba(99,102,241,0.6)] flex items-center gap-3 group relative overflow-hidden"
