@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
       session.accessToken = token.accessToken;
       
       let userRole = "member";
-      let hasAccess = false;
+      let hasAccess = true; // Allow everyone to enter workspace
 
       // 1. Check Discord Role (Highest Priority for Partner)
       if (token.discordRole === 'partner') {
