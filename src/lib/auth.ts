@@ -78,28 +78,15 @@ export const authOptions: NextAuthOptions = {
       let userRole = "member";
       let hasAccess = true; // Allow everyone to enter workspace
 
-      // 1. Check Discord Role (Highest Priority for Partner)
-      if (token.discordRole === 'partner') {
+      // 1. Supabase Role has Highest Priority (Fresh from DB)
+      if (token.supabaseRole && token.supabaseRole !== 'member') {
           hasAccess = true;
-          userRole = "partner";
+          userRole = token.supabaseRole as string;
       } 
-      // 2. Check Supabase (Priority for Premium)
-      else if (token.supabaseRole === 'premium') {
+      // 2. Fallback to Discord Role (Cached in JWT)
+      else if (token.discordRole) {
           hasAccess = true;
-          userRole = "premium";
-      }
-      else if (token.discordRole === 'premium') {
-          hasAccess = true;
-          userRole = "premium";
-      }
-      // 3. Check Free
-      else if (token.supabaseRole === 'free') {
-          hasAccess = true;
-          userRole = "free";
-      }
-      else if (token.discordRole === 'free') {
-          hasAccess = true;
-          userRole = "free";
+          userRole = token.discordRole as string;
       }
 
       // @ts-ignore
