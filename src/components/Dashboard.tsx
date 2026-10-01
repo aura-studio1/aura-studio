@@ -290,18 +290,15 @@ export default function Dashboard({ session }: { session: any }) {
             'output.mp4'
           ]);
         } else {
-          // Binary level patch (No re-encoding)
+          // Binary level patch (No re-encoding) - v1.5.6 approach
           await ffmpeg.exec([
             '-i', 'input.mp4',
-            '-c:v', 'copy',
-            '-c:a', 'copy',
-            '-movflags', 'faststart+use_metadata_tags',
-            '-color_primaries', 'bt709',
-            '-color_trc', 'bt709',
-            '-colorspace', 'bt709',
-            '-color_range', 'tv',
-            '-metadata', 'creation_time=now',
+            '-c', 'copy',
+            '-map_metadata', '-1',
+            '-map_chapters', '-1',
+            '-movflags', 'faststart',
             '-metadata:s:v:0', 'handler_name=Core Media Video',
+            '-metadata:s:a:0', 'handler_name=Core Media Sound',
             'output.mp4'
           ]);
         }

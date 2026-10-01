@@ -1,0 +1,381 @@
+﻿<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; connect-src 'self'; img-src 'self' file: data:; media-src 'self' file: blob:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alter Editing Method</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="is-booting">
+    <section class="boot-screen" id="bootScreen" aria-hidden="true">
+      <div class="boot-screen-inner">
+        <canvas class="boot-logo" id="bootLogo" width="132" height="132" aria-hidden="true"></canvas>
+        <strong class="boot-title">Alter Editing Method</strong>
+        <span class="boot-loader" aria-hidden="true"></span>
+      </div>
+    </section>
+    <canvas id="particles" aria-hidden="true"></canvas>
+    <div class="app-shell">
+      <header class="title-bar">
+        <div class="brand">
+          <canvas class="brand-logo" id="brandLogo" width="56" height="56" aria-hidden="true"></canvas>
+          <div class="brand-meta">
+            <span class="brand-name">Alter Editing Method</span>
+          </div>
+        </div>
+        <div class="title-actions">
+          <div class="tg-identity" id="tgIdentity" hidden>
+            <span class="tg-identity-id" id="tgIdentityId"></span>
+          </div>
+          <button class="icon-button" id="logsButton" type="button" title="Logs" aria-label="Logs"></button>
+          <button
+            class="icon-button badge-host"
+            id="notificationsButton"
+            type="button"
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <span class="badge" id="notificationBadge" hidden>0</span>
+          </button>
+          <button
+            class="icon-button"
+            id="developersButton"
+            type="button"
+            title="Developers"
+            aria-label="Developers"
+            aria-controls="developersPanel"
+            aria-expanded="false"
+          ></button>
+          <button class="icon-button" id="settingsButton" type="button" title="Settings" aria-label="Settings"></button>
+          <span class="title-separator"></span>
+          <button class="window-button" id="minimizeButton" type="button" aria-label="Minimize"></button>
+          <button class="window-button" id="closeButton" type="button" aria-label="Close"></button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
+        <section class="content-stack" aria-label="Video patcher">
+          <div class="divider" aria-hidden="true"><span></span><i></i><span></span></div>
+
+          <div class="tutorial-trigger-row">
+            <button class="tutorial-trigger" id="howToUseButton" type="button" aria-label="How to use tutorial">
+              <span class="tutorial-trigger-icon" aria-hidden="true"></span>
+              <span id="howToUseLabel">How to use</span>
+            </button>
+          </div>
+
+          <button class="drop-zone" id="dropZone" type="button">
+            <span class="drop-glow"></span>
+            <video class="video-preview" id="videoPreview" muted playsinline preload="auto" tabindex="-1" hidden></video>
+            <span class="upload-icon" id="uploadIcon"></span>
+            <span class="file-title" id="fileTitle"></span>
+            <span class="file-meta" id="fileMeta"></span>
+            <span class="file-stream" id="fileStream"></span>
+            <span class="file-codec" id="fileCodec"></span>
+            <span class="select-pill" id="selectPill">Select video</span>
+            <span class="drop-progress" id="dropProgress"></span>
+          </button>
+
+          <section class="output-panel" aria-label="Output settings">
+            <div class="output-row">
+              <div class="output-size-group">
+                <span id="outputSizeLabel">Output size</span>
+                <strong id="outputSizeValue">-</strong>
+              </div>
+              <button class="render-settings-toggle" id="renderSettingsButton" type="button" title="Render settings" aria-label="Render settings"></button>
+            </div>
+            <div class="bitrate-row">
+              <input
+                class="bitrate-slider"
+                id="bitrateSlider"
+                type="range"
+                min="200"
+                max="1000000"
+                value="10000"
+                step="1"
+                aria-label="Output bitrate"
+              />
+              <div class="bitrate-entry">
+                <input id="bitrateInput" type="number" min="0.2" max="1000" step="0.001" value="10.00" />
+                <span id="bitrateUnit">mb/s</span>
+              </div>
+            </div>
+            <div class="preset-row" role="group" aria-label="Bitrate presets">
+              <button class="preset-button" data-mode="low" type="button">Low</button>
+              <button class="preset-button is-active" data-mode="balanced" type="button">Balanced</button>
+              <button class="preset-button" data-mode="source" type="button">Source</button>
+            </div>
+          </section>
+
+          <button class="patch-button" id="patchButton" type="button">
+            <span id="patchButtonLabel">PATCH</span>
+            <span class="patch-progress" id="patchProgress"></span>
+          </button>
+
+          <div class="divider" aria-hidden="true"><span></span><i></i><span></span></div>
+        </section>
+
+        <button class="telegram-link" id="telegramLink" type="button"></button>
+      </main>
+
+      <section class="floating-panel settings-panel" id="settingsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="settingsTitle">Settings</strong>
+          <button class="panel-heading-icon logout-button" id="logoutButton" type="button" title="Выйти из аккаунта." aria-label="Выйти из аккаунта."></button>
+        </div>
+        <button class="panel-action" id="languageButton" type="button"></button>
+        <button class="panel-action" id="themeButton" type="button"></button>
+        <button class="panel-action" id="supportButton" type="button"></button>
+        <div class="settings-update-wrap" id="settingsUpdateWrap" hidden>
+          <button class="settings-update-button" id="updateButton" type="button"></button>
+        </div>
+        <div class="settings-footer" id="settingsVersionArea" title="Click to configure update options">
+          <span class="settings-version" id="appVersionLabel">v-</span>
+        </div>
+        <div class="settings-version-menu" id="settingsVersionMenu" hidden>
+          <label class="settings-version-menu-toggle" id="updateBetaRow">
+            <span class="settings-version-menu-beta-label" id="updateBetaToggleLabel">Beta</span>
+            <input id="updateBetaToggle" type="checkbox" />
+            <span class="settings-version-switch" aria-hidden="true"><span class="settings-version-switch-thumb"></span></span>
+            <button class="settings-version-repo-link" id="openRepoButton" type="button" title="Open repository" aria-label="Open repository"></button>
+          </label>
+        </div>
+      </section>
+
+      <section
+        class="floating-panel developers-panel"
+        id="developersPanel"
+        aria-labelledby="developersTitle"
+        hidden
+      >
+        <div class="panel-heading">
+          <strong id="developersTitle">Developers</strong>
+        </div>
+        <div class="developers-content">
+          <p id="developersIntro">Developers who have contributed or currently contribute:</p>
+          <div class="developers-list" role="list">
+            <span class="developer-alias" role="listitem" aria-label="3nd"><span class="developer-wing" aria-hidden="true">𓆩</span><span>3nd</span><span class="developer-wing" aria-hidden="true">𓆪</span></span>
+            <span class="developer-alias is-former is-former-first" role="listitem">fruzyt</span>
+            <span class="developer-alias is-former" role="listitem">dekixh</span>
+          </div>
+          <p class="developers-note" id="developersNote">Every contributor's work is part of the project.</p>
+        </div>
+      </section>
+
+      <section class="floating-panel activity-panel" id="notificationsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="notificationsTitle">Notifications</strong>
+        </div>
+        <div class="activity-list" id="notificationsList"></div>
+      </section>
+
+      <section class="floating-panel activity-panel" id="logsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="logsTitle">Logs</strong>
+          <div class="panel-tools">
+            <button class="panel-tool-button" id="copyLogsButton" type="button">Copy</button>
+            <button class="panel-tool-button" id="exportLogsButton" type="button">Export</button>
+          </div>
+        </div>
+        <div class="log-console" id="logsList"></div>
+      </section>
+
+      <section class="auth-overlay" id="authOverlay" hidden>
+        <div class="auth-dialog">
+          <canvas class="auth-logo" id="authLogo" width="108" height="108" aria-hidden="true"></canvas>
+          <strong id="authTitle">ALTER EDITING METHOD</strong>
+          <span id="authText">Confirm Telegram subscription to sign in.</span>
+          <button class="auth-button" id="authButton" type="button">Авторизация</button>
+        </div>
+      </section>
+
+      <section class="update-overlay" id="mandatoryUpdateOverlay" hidden>
+        <div class="update-dialog">
+          <button class="dialog-close-button" id="mandatoryUpdateCloseButton" type="button" aria-label="Close">×</button>
+          <strong id="mandatoryUpdateTitle">Mandatory update available</strong>
+          <span class="update-description" id="mandatoryUpdateText">A newer version is required to continue using all features.</span>
+          <div class="update-actions">
+            <button class="dialog-button primary" id="mandatoryUpdateDownloadButton" type="button">Download update</button>
+            <button class="dialog-button secondary" id="mandatoryUpdateLaterButton" type="button">Later</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="update-overlay" id="updateDetailsOverlay" hidden>
+        <div class="update-dialog update-details-dialog">
+          <button class="dialog-close-button" id="updateDetailsCloseButton" type="button" aria-label="Close">×</button>
+          <strong id="updateDetailsTitle">Update available</strong>
+          <span class="update-version" id="updateDetailsVersion"></span>
+          <span class="update-description" id="updateDetailsNotes"></span>
+          <span class="update-meta" id="updateDetailsSize"></span>
+          <div class="update-progress-block" id="updateDetailsProgressBlock" hidden>
+            <div class="update-progress-row">
+              <span id="updateDetailsProgressText">Downloading update</span>
+              <strong id="updateDetailsProgressValue">0%</strong>
+            </div>
+            <div class="update-progress-track" aria-hidden="true">
+              <span id="updateDetailsProgressBar"></span>
+            </div>
+          </div>
+          <div class="update-actions">
+            <button class="dialog-button primary" id="updateDetailsDownloadButton" type="button">Download and install</button>
+            <button class="dialog-button secondary" id="updateDetailsLaterButton" type="button">Later</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="confirm-overlay" id="closeConfirmOverlay" hidden>
+        <div class="confirm-dialog">
+          <strong id="closeConfirmTitle">Attention</strong>
+          <span id="closeConfirmText">Do you really want to interrupt video processing?</span>
+          <div class="confirm-actions">
+            <button class="panel-tool-button" id="closeConfirmStayButton" type="button">Stay</button>
+            <button class="auth-button" id="closeConfirmLeaveButton" type="button">Close</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="confirm-overlay" id="riskConfirmOverlay" hidden>
+        <div class="confirm-dialog">
+          <strong id="riskConfirmTitle">Warning</strong>
+          <span id="riskConfirmText">This video may be risky for TikTok accounts. Continue anyway?</span>
+          <label class="confirm-checkbox-row" id="riskConfirmDontShowRow" hidden>
+            <input id="riskConfirmDontShowCheckbox" type="checkbox" />
+            <span id="riskConfirmDontShowLabel">Don't show again</span>
+          </label>
+          <div class="confirm-actions">
+            <button class="panel-tool-button" id="riskConfirmCancelButton" type="button">Cancel</button>
+            <button class="auth-button" id="riskConfirmContinueButton" type="button">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="confirm-overlay" id="renderSettingsOverlay" hidden>
+        <div class="confirm-dialog render-settings-dialog">
+          <strong id="renderSettingsTitle">Render settings</strong>
+          <div class="render-settings-grid">
+            <label>
+              <span id="renderCodecLabel">Codec</span>
+              <select id="renderCodecSelect">
+                <option value="source">Source</option>
+                <option value="h264">H.264</option>
+              </select>
+            </label>
+            <label>
+              <span id="renderContainerLabel">Container</span>
+              <select id="renderContainerSelect">
+                <option value="source">Source</option>
+                <option value="mp4">MP4</option>
+                <option value="mov">MOV</option>
+              </select>
+            </label>
+            <label>
+              <span id="renderAudioBitrateLabel">Audio bitrate</span>
+              <select id="renderAudioBitrateSelect">
+                <option value="source">Source (original)</option>
+                <option value="64">64 kbps</option>
+                <option value="96">96 kbps</option>
+                <option value="128">128 kbps</option>
+                <option value="160">160 kbps</option>
+                <option value="192">192 kbps</option>
+                <option value="256">256 kbps</option>
+                <option value="320">320 kbps</option>
+              </select>
+            </label>
+          </div>
+          <div class="confirm-actions">
+            <button class="panel-tool-button" id="renderSettingsResetButton" type="button">Reset to source</button>
+            <button class="auth-button" id="renderSettingsDoneButton" type="button">Done</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-overlay" id="tutorialOverlay" hidden>
+        <div class="tutorial-dialog">
+          <button class="dialog-close-button" id="tutorialCloseButton" type="button" aria-label="Close">×</button>
+          <strong id="tutorialTitle">How to use</strong>
+          <div class="tutorial-steps">
+            <article class="tutorial-step">
+              <strong id="tutorialStep1Title">1. Select video</strong>
+              <span id="tutorialStep1Text">Drag and drop a video, or click the frame to select a file.</span>
+              <video
+                class="tutorial-video"
+                id="tutorialVideo1"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="./tutorial/1.jpg"
+              >
+                <source src="./tutorial/1.mp4" type="video/mp4" />
+              </video>
+            </article>
+            <article class="tutorial-step">
+              <strong id="tutorialStep2Title">2. Set bitrate</strong>
+              <span id="tutorialStep2Text">Choose bitrate or keep source quality.</span>
+              <video
+                class="tutorial-video"
+                id="tutorialVideo2"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="./tutorial/2.jpg"
+              >
+                <source src="./tutorial/2.mp4" type="video/mp4" />
+              </video>
+            </article>
+            <article class="tutorial-step">
+              <strong id="tutorialStep3Title">3. Patch video</strong>
+              <span id="tutorialStep3Text">Press PATCH and wait until processing is complete.</span>
+              <video
+                class="tutorial-video"
+                id="tutorialVideo3"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="./tutorial/3.jpg"
+              >
+                <source src="./tutorial/3.mp4" type="video/mp4" />
+              </video>
+            </article>
+            <article class="tutorial-step">
+              <strong id="tutorialStep4Title">4. Upload to TikTok</strong>
+              <span id="tutorialStep4Text">Upload the processed video to TikTok.</span>
+              <video
+                class="tutorial-video"
+                id="tutorialVideo4"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="./tutorial/4.jpg"
+              >
+                <source src="./tutorial/4.mp4" type="video/mp4" />
+              </video>
+            </article>
+          </div>
+          <div class="tutorial-actions">
+            <button class="dialog-button primary" id="tutorialDoneButton" type="button">Got it</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast-host" id="toastHost" aria-live="polite"></div>
+    </div>
+
+    <script src="./i18n.js"></script>
+    <script src="./app.bundle.js"></script>
+  </body>
+</html>
+
