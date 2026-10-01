@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                         {u.role}
                       </span>
                     )}
-                    {u.role === 'premium' && !editingUserId && (
+                    {u.role === 'premium' && editingUserId !== u.discord_id && (
                       <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" /> 
                         หมดอายุ: {u.premium_since ? new Date(new Date(u.premium_since).getTime() + (30 + u.bonus_days) * 24 * 60 * 60 * 1000).toLocaleDateString('th-TH') : 'N/A'}
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                         </span>
                       )}
                       
-                      {u.role === 'premium' && !editingUserId && (
+                      {u.role === 'premium' && editingUserId !== u.discord_id && (
                         <div className="flex flex-wrap gap-1.5 max-w-[120px]">
                           <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, -1)} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white text-[10px] font-bold border border-red-500/20">-1 วัน</button>
                           <button onClick={() => handleUpdateBonus(u.discord_id, u.bonus_days, 1)} className="px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white text-[10px] font-bold border border-green-500/20">+1 วัน</button>

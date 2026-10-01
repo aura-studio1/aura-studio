@@ -51,7 +51,12 @@ export async function POST(req: Request) {
     if (action === 'reset_quota') {
       const { data, error } = await supabase
         .from('aura_web_usage')
-        .update({ usage_count: 0 })
+        .update({ 
+           usage_count: 0, 
+           smooth_usage_count: 0,
+           last_reset_date: new Date().toISOString(),
+           smooth_last_reset_date: new Date().toISOString()
+        })
         .eq('discord_id', discord_id)
         .select()
         .single();
