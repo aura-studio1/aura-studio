@@ -54,8 +54,7 @@ export const authOptions: NextAuthOptions = {
         if (data) {
           return { id: discordId, name: "User", image: "" };
         } else {
-          // Allow login for new users (their role will be fetched from Discord directly)
-          return { id: discordId, name: "New User", image: "" };
+          throw new Error("Discord ID not found in our system. You may not have access.");
         }
         
         return null;
@@ -74,17 +73,15 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         token.id = profile.id;
 
-      }
-      
-      // Fetch Discord Roles on Sign-In (For BOTH OAuth and PIN)
-      if ((account || user) && token.id) {
+        // Fetch Discord Roles on Sign-In
         const guildId = process.env.DISCORD_GUILD_ID;
         const botToken = process.env.DISCORD_BOT_TOKEN;
         const partnerRoleId = process.env.DISCORD_PARTNER_ROLE_ID;
         const premiumRoleId = process.env.DISCORD_PREMIUM_ROLE_ID;
         const freeRoleId = process.env.DISCORD_FREE_ROLE_ID;
 
-        if (guildId && botToken) {
+        // @ts-ignore
+        if (guildId && botToken && token.id) {
           try {
             const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${token.id}`, {
               headers: { Authorization: `Bot ${botToken}` },
