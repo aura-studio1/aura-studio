@@ -39,7 +39,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      if (user) {
+        // @ts-ignore
+        token.id = user.id;
+      }
+      
       if (account && profile) {
         token.accessToken = account.access_token;
         // @ts-ignore
