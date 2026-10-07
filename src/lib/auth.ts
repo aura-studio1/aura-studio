@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client
@@ -12,6 +13,29 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID || "",
       clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+    }),
+    CredentialsProvider({
+      name: "Discord ID (Emergency)",
+      credentials: {
+        discordId: { label: "ใส่ Discord ID ของคุณ", type: "text", placeholder: "เช่น 1234567890" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.discordId) return null;
+        
+        // เช็คว่ามี ID นี้ในระบบไหม (แอดมินเคยแอดไว้ไหม)
+        const { data } = await supabase
+          .from('aura_web_usage')
+          .select('*')
+          .eq('discord_id', credentials.discordId)
+          .single();
+          
+        if (data) {
+          // ถ้ามี ก็ให้ล็อกอินผ่านไปเลย
+          return { id: credentials.discordId, name: "User", image: "" };
+        }
+        
+        return null;
+      }
     }),
   ],
   callbacks: {

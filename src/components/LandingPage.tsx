@@ -140,7 +140,7 @@ export default function LandingPage() {
                 </Link>
               </div>
             ) : (
-              <button onClick={() => signIn("discord")}
+              <button onClick={() => signIn()}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-full btn-glass text-sm group"
               >
                 {t("nav.login")} <ArrowRight className="w-4 h-4 text-[#ddbc76] group-hover:translate-x-1 transition-transform" />
@@ -240,7 +240,7 @@ export default function LandingPage() {
                 </Link>
               </div>
             ) : (
-              <button onClick={() => signIn("discord")}
+              <button onClick={() => signIn()}
                 className="px-12 py-5 rounded-full btn-primary text-lg shadow-[0_0_60px_rgba(99,102,241,0.4)] hover:shadow-[0_0_80px_rgba(99,102,241,0.6)] flex items-center gap-3 group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
