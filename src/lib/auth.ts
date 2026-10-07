@@ -15,47 +15,23 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
     }),
     CredentialsProvider({
-      name: "Discord ID (Secure)",
+      name: "Discord ID (Emergency)",
       credentials: {
-        discordId: { label: "ใส่ Discord ID ของคุณ", type: "text", placeholder: "เช่น 1234567890" },
-        pin: { label: "รหัส PIN (พิมพ์ /login ในเซิร์ฟเวอร์ดิสคอร์ด)", type: "password", placeholder: "รับรหัสจากบอท AURA" }
+        discordId: { label: "ใส่ Discord ID ของคุณ", type: "text", placeholder: "เช่น 1234567890" }
       },
       async authorize(credentials) {
-        if (!credentials?.discordId || !credentials?.pin) return null;
+        if (!credentials?.discordId) return null;
         
-        const crypto = require('crypto');
-        const secret = process.env.NEXTAUTH_SECRET || "fala_secret";
-        const discordId = credentials.discordId;
-        const inputPin = credentials.pin;
-
-        // Check current time window and previous time window (valid for up to 10 mins)
-        let isValidPin = false;
-        for (let offset of [0, -1]) {
-            const timeWindow = Math.floor(Date.now() / (5 * 60 * 1000)) + offset;
-            const hash = crypto.createHmac('sha256', secret).update(`${discordId}-${timeWindow}`).digest('hex');
-            const num = parseInt(hash.substring(0, 8), 16);
-            const validPin = (num % 1000000).toString().padStart(6, '0');
-            if (inputPin === validPin) {
-                isValidPin = true;
-                break;
-            }
-        }
-
-        if (!isValidPin) {
-            throw new Error("รหัส PIN ไม่ถูกต้อง หรือหมดอายุแล้ว กรุณาพิมพ์ /login ใหม่ในดิสคอร์ด");
-        }
-        
-        // เช็คว่ามี ID นี้ในระบบไหม
+        // เช็คว่ามี ID นี้ในระบบไหม (แอดมินเคยแอดไว้ไหม)
         const { data } = await supabase
           .from('aura_web_usage')
           .select('*')
-          .eq('discord_id', discordId)
+          .eq('discord_id', credentials.discordId)
           .single();
           
         if (data) {
-          return { id: discordId, name: "User", image: "" };
-        } else {
-          throw new Error("ไม่พบ Discord ID ของคุณในระบบ (คุณยังไม่ได้ซื้อแพ็คเกจ)");
+          // ถ้ามี ก็ให้ล็อกอินผ่านไปเลย
+          return { id: credentials.discordId, name: "User", image: "" };
         }
         
         return null;
