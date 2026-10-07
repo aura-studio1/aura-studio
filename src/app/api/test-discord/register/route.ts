@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     const command = {
         name: 'login',
-        description: 'Get a PIN code to login to AURA STUDIO website',
+        description: 'รับรหัส PIN สำหรับล็อกอินเข้าเว็บไซต์ AURA STUDIO',
         type: 1, // CHAT_INPUT
     };
 

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
             if (!discordId) {
                 return NextResponse.json({
                     type: 4,
-                    data: { content: "❌ Could not identify user.", flags: 64 }
+                    data: { content: "❌ ไม่สามารถระบุตัวตนได้", flags: 64 }
                 });
             }
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 type: 4,
                 data: { 
-                    content: `🔐 **Your AURA STUDIO Login PIN:** \`${pin}\`\n\n**Your Discord ID:** \`${discordId}\`\n\nEnter both your Discord ID and this PIN on the website to log in. (PIN expires in 5 minutes)`, 
+                    content: `🔐 **รหัสเข้าสู่ระบบ AURA STUDIO ของคุณคือ:** \`${pin}\`\n\nนำรหัสนี้ไปกรอกที่หน้าเว็บคู่กับ Discord ID ของคุณได้เลยครับ (รหัสนี้มีอายุ 5 นาที)`, 
                     flags: 64 // Ephemeral message (only the user can see it)
                 }
             });
