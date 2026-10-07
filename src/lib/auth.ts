@@ -17,8 +17,8 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Discord ID (Secure)",
       credentials: {
-        discordId: { label: "ใส่ Discord ID ของคุณ", type: "text", placeholder: "เช่น 1234567890" },
-        pin: { label: "รหัส PIN (พิมพ์ /login ในเซิร์ฟเวอร์ดิสคอร์ด)", type: "password", placeholder: "รับรหัสจากบอท AURA" }
+        discordId: { label: "Your Discord ID", type: "text", placeholder: "e.g., 1234567890" },
+        pin: { label: "PIN Code (Type /login in Discord)", type: "password", placeholder: "Enter PIN from AURA Bot" }
       },
       async authorize(credentials) {
         if (!credentials?.discordId || !credentials?.pin) return null;
@@ -42,10 +42,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (!isValidPin) {
-            throw new Error("รหัส PIN ไม่ถูกต้อง หรือหมดอายุแล้ว กรุณาพิมพ์ /login ใหม่ในดิสคอร์ด");
+            throw new Error("Invalid or expired PIN. Please type /login in Discord again.");
         }
         
-        // เช็คว่ามี ID นี้ในระบบไหม
         const { data } = await supabase
           .from('aura_web_usage')
           .select('*')
@@ -55,7 +54,7 @@ export const authOptions: NextAuthOptions = {
         if (data) {
           return { id: discordId, name: "User", image: "" };
         } else {
-          throw new Error("ไม่พบ Discord ID ของคุณในระบบ (คุณยังไม่ได้ซื้อแพ็คเกจ)");
+          throw new Error("Discord ID not found in our system. You may not have access.");
         }
         
         return null;
